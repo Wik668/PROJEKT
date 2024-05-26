@@ -4,6 +4,7 @@ using namespace std;
 
 int main()
 {
-    cout << "Helloasas" << endl;
+    cout << "Commit1" << endl;
     return 0;
 }
+
