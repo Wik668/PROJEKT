@@ -31,12 +31,17 @@ public:
             setTextureRect(frames[currentFrame]);
         }
     }
+
+    void reset() {
+        currentFrame = 0;
+        setTextureRect(frames[currentFrame]);
+    }
 };
 
 int main() {
     int window_width = 800;
     int window_height = 600;
-    sf::RenderWindow window(sf::VideoMode(window_width, window_height), "Nasza GRA");
+    sf::RenderWindow window(sf::VideoMode(window_width, window_height), "StreetFighter");
 
     Texture background_image;
     if (!background_image.loadFromFile("background.png")) {
@@ -63,7 +68,7 @@ int main() {
     hero.add_animation_frame(IntRect(265, 0, 25, 37)); // Ruch postaci
     hero.add_animation_frame(IntRect(315, 0, 25, 37)); // Ruch postaci
     hero.add_animation_frame(IntRect(365, 0, 25, 37)); // Ruch postaci
-    hero.add_animation_frame(IntRect(12, 5, 20, 32));  // Spoczynek postaci
+    hero.add_animation_frame(IntRect(10, 5, 20, 35));  // Spoczynek postaci
     hero.setPosition(100, 0);
     hero.setScale(2, 2);
     hero.setTextureRect(IntRect(200, 0, 37, 37)); // Ustawienie domyślnego wyglądu postaci
@@ -78,28 +83,38 @@ int main() {
                 window.close();
         }
 
-        hero.step(); // Aktualizacja animacji
+        bool isMoving = false;
 
         // Poruszanie postacią
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left)) {
             hero.move(-move_speed, 0);
+            isMoving = true;
         }
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right)) {
             hero.move(move_speed, 0);
+            isMoving = true;
         }
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up)) {
             hero.move(0, -move_speed);
+            isMoving = true;
         }
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down)) {
             hero.move(0, move_speed);
+            isMoving = true;
+        }
+
+        if (isMoving) {
+            hero.step(); // animacja tylko podczas ruchu
+        } else {
+            hero.reset(); // domyslny wygląd postaci
         }
 
         window.clear(sf::Color::Black);
 
-        // Rysuj tło
+        // wyswietla tlo tło
         window.draw(background_sprite);
 
-        // Rysuj postać
+        // wyswietla postać
         window.draw(hero);
 
         window.display();
