@@ -56,17 +56,17 @@ int main() {
         return 1;
     }
 
-    // Utwórz sprite postaci i ustaw jego teksturę
-    AnimatedSprite character_sprite(10); // 10 klatek na sekundę
-    character_sprite.setTexture(character_texture);
-    character_sprite.setScale(2,2);
-
-    // Dodaj klatki animacji
-    character_sprite.add_animation_frame(IntRect(0, 0, 32, 32)); // Przykładowa klatka animacji
-
-    // Ustaw pozycję początkową postaci na środku ekranu
-    Vector2f character_position(window_width / 2, window_height / 2);
-    character_sprite.setPosition(character_position);
+    // Ustawienia postaci
+    AnimatedSprite hero(7); // 7 klatek na sekundę
+    hero.setTexture(character_texture);
+    hero.add_animation_frame(IntRect(215, 0, 25, 37)); // Ruch postaci
+    hero.add_animation_frame(IntRect(265, 0, 25, 37)); // Ruch postaci
+    hero.add_animation_frame(IntRect(315, 0, 25, 37)); // Ruch postaci
+    hero.add_animation_frame(IntRect(365, 0, 25, 37)); // Ruch postaci
+    hero.add_animation_frame(IntRect(12, 5, 20, 32));  // Spoczynek postaci
+    hero.setPosition(100, 0);
+    hero.setScale(2, 2);
+    hero.setTextureRect(IntRect(200, 0, 37, 37)); // Ustawienie domyślnego wyglądu postaci
 
     // Prędkość poruszania się postaci
     float move_speed = 0.1f;
@@ -78,24 +78,21 @@ int main() {
                 window.close();
         }
 
-        character_sprite.step(); // Aktualizacja animacji
+        hero.step(); // Aktualizacja animacji
 
         // Poruszanie postacią
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left)) {
-            character_position.x -= move_speed;
+            hero.move(-move_speed, 0);
         }
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right)) {
-            character_position.x += move_speed;
+            hero.move(move_speed, 0);
         }
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up)) {
-            character_position.y -= move_speed;
+            hero.move(0, -move_speed);
         }
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down)) {
-            character_position.y += move_speed;
+            hero.move(0, move_speed);
         }
-
-        // Ustaw nową pozycję postaci
-        character_sprite.setPosition(character_position);
 
         window.clear(sf::Color::Black);
 
@@ -103,7 +100,7 @@ int main() {
         window.draw(background_sprite);
 
         // Rysuj postać
-        window.draw(character_sprite);
+        window.draw(hero);
 
         window.display();
     }
