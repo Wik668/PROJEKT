@@ -275,7 +275,8 @@ public:
         updateSelection();
     }
 
-    void moveSelectionDown() {
+    void moveSelectionDown()
+    {
         selectedSurvival = false;
         updateSelection();
     }
