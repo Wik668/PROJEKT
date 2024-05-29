@@ -308,6 +308,9 @@ private:
     sf::Texture character_texture;
     sf::Texture background_texture;
     sf::Sprite background_sprite;
+    sf::Music gameMusic;//dodane do muzyki
+    sf::SoundBuffer buffer;
+    sf::Sound sound;
     Menu menu;
     bool gameStarted;
     bool survivalMode; // New variable to store the selected game mode
@@ -329,11 +332,30 @@ private:
             cout << "Nie udało się wczytać tekstury zombie" << endl;
             exit(1);
         }
+        if (!buffer.loadFromFile("menu_music.wav")) {
+            std::cout << "Nie udało się wczytać dźwięku menu" << std::endl;
+        }
+
+        sound.setBuffer(buffer);
+        sound.setLoop(true); // Set the sound to loop
+        // Dodaj ten kod //dodany do muzyki
+        if (!gameMusic.openFromFile("blanka.wav")) { // Zmień ścieżkę na rzeczywistą ścieżkę do pliku muzycznego
+            std::cout << "Nie udało się wczytać muzyki" << std::endl;
+            exit(1);
+        }
 
         // No need to scale the background sprite anymore
         background_sprite.setTexture(background_texture);
     }
 
+
+    void playSound() {
+        sound.play();
+    }
+
+    void stopSound() {
+        sound.stop();
+    }
     void initializeHero() {
         hero.setTexture(character_texture);
         hero.add_animation_frame_right(IntRect(9, 70, 14, 25));
@@ -452,6 +474,8 @@ public:
             update();
             render();
         }
+
+        gameMusic.stop();
     }
 
     void handleEvents() {
@@ -468,6 +492,8 @@ public:
                         survivalMode = menu.isSurvivalSelected(); // Set the selected game mode
                         menu.stopSound();
                         survivalClock.restart();
+                        gameMusic.setLoop(true); // Ustaw muzykę na zapętlanie //DODANY
+                        gameMusic.play();//dodany
                     } else if (event.key.code == Keyboard::Up) {
                         menu.moveSelectionUp();
                     } else if (event.key.code == Keyboard::Down) {
