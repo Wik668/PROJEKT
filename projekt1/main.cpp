@@ -205,7 +205,7 @@ private:
 
 class Menu {
 private:
-    sf::Font font;
+    sf::Font font;//czcionka
     sf::Text text;
     sf::Texture background_texture;
     sf::Sprite background_sprite;
