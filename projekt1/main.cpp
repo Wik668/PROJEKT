@@ -168,32 +168,32 @@ int main() {
     hero.setTexture(character_texture);
     // Dodaj klatki animacji dla każdego kierunku
     // Prawo
-    hero.add_animation_frame_right(IntRect(9, 70, 23, 94));
-    hero.add_animation_frame_right(IntRect(41, 70, 56, 94));
-    hero.add_animation_frame_right(IntRect(73, 70, 87, 94));
-    hero.add_animation_frame_right(IntRect(105, 70, 120, 94));
-    hero.add_standing_frame_right(IntRect(136, 70, 146, 94)); // Dodajemy klatkę stojącą dla kierunku prawo
+    hero.add_animation_frame_right(IntRect(9, 70, 25, 25));
+    hero.add_animation_frame_right(IntRect(41, 70, 25, 25));
+    hero.add_animation_frame_right(IntRect(73, 70, 25, 25));
+    hero.add_animation_frame_right(IntRect(105, 70, 25, 25));
+    hero.add_standing_frame_right(IntRect(136, 70, 25, 25)); // Dodajemy klatkę stojącą dla kierunku prawo
     // Lewo
-    hero.add_animation_frame_left(IntRect(10, 102, 23, 125));
-    hero.add_animation_frame_left(IntRect(41, 102, 56, 125));
-    hero.add_animation_frame_left(IntRect(73, 102, 87, 125));
-    hero.add_animation_frame_left(IntRect(105, 102, 120, 125));
-    hero.add_standing_frame_left(IntRect(136, 102, 147, 125)); // Dodajemy klatkę stojącą dla kierunku lewo
+    hero.add_animation_frame_left(IntRect(10, 102, 25, 25));
+    hero.add_animation_frame_left(IntRect(41, 102, 25, 25));
+    hero.add_animation_frame_left(IntRect(73, 102, 25, 25));
+    hero.add_animation_frame_left(IntRect(105, 102, 25, 25));
+    hero.add_standing_frame_left(IntRect(136, 102, 25, 25)); // Dodajemy klatkę stojącą dla kierunku lewo
     // Góra
-    hero.add_animation_frame_up(IntRect(10, 38, 23, 63));
-    hero.add_animation_frame_up(IntRect(41, 38, 56, 63));
-    hero.add_animation_frame_up(IntRect(73, 38, 87, 63));
-    hero.add_animation_frame_up(IntRect(105, 38, 120, 63));
-    hero.add_standing_frame_up(IntRect(136, 38, 148, 63)); // Dodajemy klatkę stojącą dla kierunku góra
+    hero.add_animation_frame_up(IntRect(10, 38, 25, 25));
+    hero.add_animation_frame_up(IntRect(41, 38, 25, 25));
+    hero.add_animation_frame_up(IntRect(73, 38, 25, 25));
+    hero.add_animation_frame_up(IntRect(105, 38, 25, 25));
+    hero.add_standing_frame_up(IntRect(136, 38, 25, 25)); // Dodajemy klatkę stojącą dla kierunku góra
     // Dół
-    hero.add_animation_frame_down(IntRect(9, 5, 23, 31));
-    hero.add_animation_frame_down(IntRect(41, 5, 56, 31));
-    hero.add_animation_frame_down(IntRect(73, 5, 87, 31));
-    hero.add_animation_frame_down(IntRect(105, 5, 120, 31));
-    hero.add_standing_frame_down(IntRect(134, 5, 149, 31)); // Dodajemy klatkę stojącą dla kierunku dół
+    hero.add_animation_frame_down(IntRect(9, 5, 25, 25));//9,5,23,31 bylo
+    hero.add_animation_frame_down(IntRect(41, 5, 25, 25));
+    hero.add_animation_frame_down(IntRect(73, 5, 25, 25));
+    hero.add_animation_frame_down(IntRect(105, 5, 25, 25));
+    hero.add_standing_frame_down(IntRect(134, 5, 25, 25)); // Dodajemy klatkę stojącą dla kierunku dół
     hero.setPosition(200, 200);
     hero.setScale(2, 2);
-    // hero.setTextureRect(IntRect(200, 0, 37, 37)); // Ustawienie domyślnego wyglądu postaci
+    hero.setTextureRect(IntRect(134, 5, 149, 31)); // Ustawienie domyślnego wyglądu postaci
 
     // Prędkość poruszania się postaci
     float move_speed = 0.1f;
