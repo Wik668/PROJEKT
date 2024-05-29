@@ -6,9 +6,20 @@
 #include <SFML/Audio/SoundBuffer.hpp>
 #include <sstream>
 #include <iomanip>
-
+#include <SFML/System/Vector2.hpp> // Include the necessary header
+#include <cmath>
 using namespace std;
 using namespace sf;
+
+
+sf::Vector2f normalize(sf::Vector2f vec) {
+    float length = std::sqrt(vec.x * vec.x + vec.y * vec.y);
+    if (length != 0) {
+        return sf::Vector2f(vec.x / length, vec.y / length);
+    } else {
+        return sf::Vector2f(0, 0);
+    }
+}
 
 class Zombie : public Sprite {
 private:
@@ -22,7 +33,21 @@ private:
     Clock clock;
     enum Direction { Up, Down, Left, Right } direction;
 
+
 public:
+    void moveWithCollision(const sf::FloatRect& bounds, float offsetX, float offsetY) {
+        sf::Vector2f oldPosition = getPosition();
+        sf::Sprite::move(offsetX, offsetY);
+        sf::FloatRect spriteBounds = getGlobalBounds();
+
+        if (spriteBounds.left < bounds.left ||
+            spriteBounds.top < bounds.top ||
+            spriteBounds.left + spriteBounds.width > bounds.left + bounds.width ||
+            spriteBounds.top + spriteBounds.height > bounds.top + bounds.height) {
+            setPosition(oldPosition);
+        }
+    }
+
     Zombie(int fps) : currentFrame(0), animationFps(fps), direction(Right) {}
 
     void add_animation_frame_right(const IntRect& frame) {
@@ -402,9 +427,10 @@ private:
     }
 
 public:
+
     Game()
         : window(sf::VideoMode(window_width, window_height), "Game Window"),
-        hero(5), gameStarted(false), move_speed(0.1f) {
+        hero(5), gameStarted(false), move_speed(0.1f) { // Initialize move_speed here
         loadResources();
         initializeHero();
         initializeZombies();
@@ -466,8 +492,20 @@ public:
             }
             hero.step();
 
+            // Calculate direction vector towards the player
+            Vector2f playerPosition = hero.getPosition();
             for (auto& zombie : zombies) {
-                zombie.step(); // Update each zombie's animation
+                Vector2f zombiePosition = zombie.getPosition();
+                Vector2f direction = playerPosition - zombiePosition;
+                direction = normalize(direction); // Normalize the vector to get a unit vector
+
+                // Move the zombie towards the player
+                float moveX = direction.x * move_speed*0.2;
+                float moveY = direction.y * move_speed*0.2;
+                zombie.moveWithCollision(bounds, moveX, moveY);
+
+                // Update zombie animation
+                zombie.step();
             }
 
             if (survivalMode) {
@@ -501,6 +539,7 @@ public:
         }
         window.display();
     }
+
 };
 
 int main() {
