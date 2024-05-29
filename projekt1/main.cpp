@@ -321,7 +321,7 @@ private:
     sf::Font font;
 
     void loadResources() {
-        if (!background_texture.loadFromFile("background.png")) {
+        if (!background_texture.loadFromFile("puste.png")) {
             cout << "Nie udało się wczytać tekstury tła" << endl;
             exit(1);
         }
@@ -393,16 +393,16 @@ private:
             Zombie zombie(5);
             zombie.setTexture(zombie_texture);
 
-            zombie.add_animation_frame_right(IntRect(11, 69, 12, 26));
-            zombie.add_animation_frame_right(IntRect(42, 69, 12, 26));
-            zombie.add_standing_frame_right(IntRect(74, 69, 12, 26));
-            zombie.add_animation_frame_right(IntRect(107, 69, 12, 26));
-            zombie.add_animation_frame_right(IntRect(140, 69, 12, 26));
-            zombie.add_animation_frame_right(IntRect(173, 69, 12, 26));
-            zombie.add_animation_frame_right(IntRect(204, 69, 12, 26));
-            zombie.add_standing_frame_right(IntRect(236, 69, 12, 26));
-            zombie.add_animation_frame_right(IntRect(269, 69, 12, 26));
-            zombie.add_animation_frame_right(IntRect(300, 69, 12, 26));
+            zombie.add_animation_frame_right(IntRect(11, 69, 12, 30));
+            zombie.add_animation_frame_right(IntRect(42, 69, 12, 30));
+            zombie.add_standing_frame_right(IntRect(74, 69, 12, 30));
+            zombie.add_animation_frame_right(IntRect(107, 69, 12, 30));
+            zombie.add_animation_frame_right(IntRect(140, 69, 12, 30));
+            zombie.add_animation_frame_right(IntRect(173, 69, 12, 30));
+            zombie.add_animation_frame_right(IntRect(204, 69, 12, 30));
+            zombie.add_standing_frame_right(IntRect(236, 69, 12, 30));
+            zombie.add_animation_frame_right(IntRect(269, 69, 12, 30));
+            zombie.add_animation_frame_right(IntRect(300, 69, 12, 30));
 
             zombie.add_standing_frame_left(IntRect(9, 101, 12, 26));
             zombie.add_animation_frame_left(IntRect(41, 101, 12, 26));
@@ -518,6 +518,8 @@ public:
                 hero.moveWithCollision(bounds, 0, move_speed);
             }
             hero.step();
+
+
 
             // Calculate direction vector towards the player
             Vector2f playerPosition = hero.getPosition();
