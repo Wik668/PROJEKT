@@ -519,8 +519,6 @@ public:
             }
             hero.step();
 
-
-
             // Calculate direction vector towards the player
             Vector2f playerPosition = hero.getPosition();
             for (auto& zombie : zombies) {
