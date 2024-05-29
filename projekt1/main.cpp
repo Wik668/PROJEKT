@@ -89,6 +89,8 @@ private:
         case Up: return framesUp;
         case Down: return framesDown;
         }
+        // To avoid warning, returning framesRight as a default case.
+        return framesRight;
     }
 };
 
@@ -100,9 +102,12 @@ private:
     sf::Sprite background_sprite;
     sf::SoundBuffer buffer;
     sf::Sound sound;
+    sf::Text survivalText;
+    sf::Text stageText;
+    bool selectedSurvival;
 
 public:
-    Menu() {
+    Menu() : selectedSurvival(true) {
         if (!font.loadFromFile("arial.ttf")) {
             std::cout << "Nie udało się wczytać czcionki" << std::endl;
         }
@@ -125,84 +130,109 @@ public:
         text.setCharacterSize(24);
         text.setFillColor(sf::Color::White);
         text.setPosition(250, 300);
+
+        survivalText.setFont(font);
+        survivalText.setString("Survival Mode");
+        survivalText.setCharacterSize(24);
+        survivalText.setFillColor(sf::Color::White);
+        survivalText.setPosition(250, 350);
+
+        stageText.setFont(font);
+        stageText.setString("Stage Mode");
+        stageText.setCharacterSize(24);
+        stageText.setFillColor(sf::Color::White);
+        stageText.setPosition(250, 400);
     }
 
     void playSound() {
         sound.play();
     }
 
-    void draw(sf::RenderWindow& window) {
-        window.draw(background_sprite);
-        window.draw(text);
-    }
     void stopSound() {
         sound.stop();
     }
+
+    void draw(sf::RenderWindow& window) {
+        window.draw(background_sprite);
+        window.draw(text);
+        window.draw(survivalText);
+        window.draw(stageText);
+    }
+
+    void moveSelectionUp() {
+        selectedSurvival = true;
+        survivalText.setFillColor(sf::Color::Red);
+        stageText.setFillColor(sf::Color::White);
+    }
+
+    void moveSelectionDown() {
+        selectedSurvival = false;
+        survivalText.setFillColor(sf::Color::White);
+        stageText.setFillColor(sf::Color::Red);
+    }
+
+    bool isSurvivalSelected() const {
+        return selectedSurvival;
+    }
 };
 
-int main() {
+
+class Game {
+private:
     int window_width = 800;
     int window_height = 600;
-    sf::RenderWindow window(sf::VideoMode(window_width, window_height), "Nasza GRA");
-
-    Texture background_image;
-    if (!background_image.loadFromFile("background.png")) {
-        cout << "Nie udało się wczytać tekstury tła" << endl;
-        return 1;
-    }
-
-    // Ustawienie skalowania tekstury tła na rozmiar okna
-    background_image.setRepeated(true);
-    Sprite background_sprite(background_image);
-    background_sprite.setTextureRect(IntRect(0, 0, window_width, window_height));
-
-    // Załaduj teksturę postaci
-    Texture character_texture;
-    if (!character_texture.loadFromFile("walk.png")) {
-        cout << "Nie udało się wczytać tekstury postaci" << endl;
-        return 1;
-    }
-
-    // Ustawienia postaci
-    AnimatedSprite hero(7); // 7 klatek na sekundę
-    hero.setTexture(character_texture);
-    // Dodaj klatki animacji dla każdego kierunku
-    // Prawo
-    hero.add_animation_frame_right(IntRect(9, 70, 25, 25));
-    hero.add_animation_frame_right(IntRect(41, 70, 25, 25));
-    hero.add_animation_frame_right(IntRect(73, 70, 25, 25));
-    hero.add_animation_frame_right(IntRect(105, 70, 25, 25));
-    hero.add_standing_frame_right(IntRect(136, 70, 25, 25)); // Dodajemy klatkę stojącą dla kierunku prawo
-    // Lewo
-    hero.add_animation_frame_left(IntRect(10, 102, 25, 25));
-    hero.add_animation_frame_left(IntRect(41, 102, 25, 25));
-    hero.add_animation_frame_left(IntRect(73, 102, 25, 25));
-    hero.add_animation_frame_left(IntRect(105, 102, 25, 25));
-    hero.add_standing_frame_left(IntRect(136, 102, 25, 25)); // Dodajemy klatkę stojącą dla kierunku lewo
-    // Góra
-    hero.add_animation_frame_up(IntRect(10, 38, 25, 25));
-    hero.add_animation_frame_up(IntRect(41, 38, 25, 25));
-    hero.add_animation_frame_up(IntRect(73, 38, 25, 25));
-    hero.add_animation_frame_up(IntRect(105, 38, 25, 25));
-    hero.add_standing_frame_up(IntRect(136, 38, 25, 25)); // Dodajemy klatkę stojącą dla kierunku góra
-    // Dół
-    hero.add_animation_frame_down(IntRect(9, 5, 25, 25));//9,5,23,31 bylo
-    hero.add_animation_frame_down(IntRect(41, 5, 25, 25));
-    hero.add_animation_frame_down(IntRect(73, 5, 25, 25));
-    hero.add_animation_frame_down(IntRect(105, 5, 25, 25));
-    hero.add_standing_frame_down(IntRect(134, 5, 25, 25)); // Dodajemy klatkę stojącą dla kierunku dół
-    hero.setPosition(200, 200);
-    hero.setScale(2, 2);
-    hero.setTextureRect(IntRect(134, 5, 149, 31)); // Ustawienie domyślnego wyglądu postaci
-
-    // Prędkość poruszania się postaci
-    float move_speed = 0.1f;
-
+    sf::RenderWindow window;
+    AnimatedSprite hero;
+    sf::Texture character_texture;
+    sf::Texture background_image;
+    sf::Sprite background_sprite;
     Menu menu;
-    bool gameStarted = false;
-    menu.playSound();
+    bool gameStarted;
+    bool survivalMode; // Nowa zmienna do przechowywania wybranego trybu gry
+    float move_speed;
 
-    while (window.isOpen()) {
+    void loadResources() {
+        if (!background_image.loadFromFile("background.png")) {
+            cout << "Nie udało się wczytać tekstury tła" << endl;
+            exit(1);
+        }
+
+        background_image.setRepeated(true);
+        background_sprite.setTexture(background_image);
+        background_sprite.setTextureRect(IntRect(0, 0, window_width, window_height));
+
+        if (!character_texture.loadFromFile("walk.png")) {
+            cout << "Nie udało się wczytać tekstury postaci" << endl;
+            exit(1);
+        }
+
+        hero.setTexture(character_texture);
+        hero.add_animation_frame_right(IntRect(9, 70, 25, 25));
+        hero.add_animation_frame_right(IntRect(41, 70, 25, 25));
+        hero.add_animation_frame_right(IntRect(73, 70, 25, 25));
+        hero.add_animation_frame_right(IntRect(105, 70, 25, 25));
+        hero.add_standing_frame_right(IntRect(134, 70, 25, 25));
+        hero.add_animation_frame_left(IntRect(10, 102, 25, 25));
+        hero.add_animation_frame_left(IntRect(41, 102, 25, 25));
+        hero.add_animation_frame_left(IntRect(73, 102, 25, 25));
+        hero.add_animation_frame_left(IntRect(105, 102, 25, 25));
+        hero.add_standing_frame_left(IntRect(134, 102, 25, 25));
+        hero.add_animation_frame_up(IntRect(10, 38, 25, 25));
+        hero.add_animation_frame_up(IntRect(41, 38, 25, 25));
+        hero.add_animation_frame_up(IntRect(73, 38, 25, 25));
+        hero.add_animation_frame_up(IntRect(105, 38, 25, 25));
+        hero.add_standing_frame_up(IntRect(134, 38, 25, 25));
+        hero.add_animation_frame_down(IntRect(9, 5, 25, 25));
+        hero.add_animation_frame_down(IntRect(41, 5, 25, 25));
+        hero.add_animation_frame_down(IntRect(73, 5, 25, 25));
+        hero.add_animation_frame_down(IntRect(105, 5, 25, 25));
+        hero.add_standing_frame_down(IntRect(134, 5, 25, 25));
+        hero.setPosition(200, 200);
+        hero.setScale(2, 2);
+        hero.setTextureRect(IntRect(134, 5, 25, 25)); // Corrected the texture rectangle dimensions
+    }
+
+    void handleInput() {
         sf::Event event;
         while (window.pollEvent(event)) {
             if (event.type == sf::Event::Closed)
@@ -210,41 +240,69 @@ int main() {
 
             if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Enter) {
                 gameStarted = true;
-                menu.stopSound();  // Zatrzymaj muzykę, gdy gra się rozpocznie
+                survivalMode = menu.isSurvivalSelected();
+                menu.stopSound();
+            }
+
+            if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Up) {
+                menu.moveSelectionUp();
+            }
+
+            if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Down) {
+                menu.moveSelectionDown();
             }
         }
 
-        hero.step(); // Aktualizacja animacji
+        if (gameStarted) {
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left)) {
+                hero.move(-move_speed, 0);
+            }
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right)) {
+                hero.move(move_speed, 0);
+            }
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up)) {
+                hero.move(0, -move_speed);
+            }
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down)) {
+                hero.move(0, move_speed);
+            }
+        }
+    }
 
-        // Poruszanie postacią
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left)) {
-            hero.move(-move_speed, 0);
+    void update() {
+        if (gameStarted) {
+            hero.step();
         }
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right)) {
-            hero.move(move_speed, 0);
-        }
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up)) {
-            hero.move(0, -move_speed);
-        }
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down)) {
-            hero.move(0, move_speed);
-        }
+    }
 
+    void render() {
         window.clear(sf::Color::Black);
-
         if (!gameStarted) {
             menu.draw(window);
-
         } else {
-            // Rysuj tło
             window.draw(background_sprite);
-
-            // Rysuj postać
             window.draw(hero);
         }
-
         window.display();
     }
 
+public:
+    Game() : window(sf::VideoMode(window_width, window_height), "Nasza GRA"), hero(7), gameStarted(false), move_speed(0.1f) {
+        loadResources();
+        menu.playSound();
+    }
+
+    void run() {
+        while (window.isOpen()) {
+            handleInput();
+            update();
+            render();
+        }
+    }
+};
+
+int main() {
+    Game game;
+    game.run();
     return 0;
 }
