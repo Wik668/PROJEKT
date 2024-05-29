@@ -73,12 +73,22 @@ public:
         }
     }
 
-    void move(float offsetX, float offsetY) {
+    void moveWithCollision(const FloatRect& bounds, float offsetX, float offsetY) {
+        Vector2f oldPosition = getPosition();
         Sprite::move(offsetX, offsetY);
-        if (offsetX > 0) direction = Right;
-        else if (offsetX < 0) direction = Left;
-        else if (offsetY > 0) direction = Down;
-        else if (offsetY < 0) direction = Up;
+        FloatRect spriteBounds = getGlobalBounds();
+
+        if (spriteBounds.left < bounds.left ||
+            spriteBounds.top < bounds.top ||
+            spriteBounds.left + spriteBounds.width > bounds.left + bounds.width ||
+            spriteBounds.top + spriteBounds.height > bounds.top + bounds.height) {
+            setPosition(oldPosition);
+        } else {
+            if (offsetX > 0) direction = Right;
+            else if (offsetX < 0) direction = Left;
+            else if (offsetY > 0) direction = Down;
+            else if (offsetY < 0) direction = Up;
+        }
     }
 
 private:
@@ -176,7 +186,6 @@ public:
     }
 };
 
-
 class Game {
 private:
     int window_width = 800;
@@ -207,36 +216,40 @@ private:
         }
 
         hero.setTexture(character_texture);
-        hero.add_animation_frame_right(IntRect(9, 70, 25, 25));
-        hero.add_animation_frame_right(IntRect(41, 70, 25, 25));
-        hero.add_animation_frame_right(IntRect(73, 70, 25, 25));
-        hero.add_animation_frame_right(IntRect(105, 70, 25, 25));
-        hero.add_standing_frame_right(IntRect(134, 70, 25, 25));
-        hero.add_animation_frame_left(IntRect(10, 102, 25, 25));
-        hero.add_animation_frame_left(IntRect(41, 102, 25, 25));
-        hero.add_animation_frame_left(IntRect(73, 102, 25, 25));
-        hero.add_animation_frame_left(IntRect(105, 102, 25, 25));
-        hero.add_standing_frame_left(IntRect(134, 102, 25, 25));
-        hero.add_animation_frame_up(IntRect(10, 38, 25, 25));
-        hero.add_animation_frame_up(IntRect(41, 38, 25, 25));
-        hero.add_animation_frame_up(IntRect(73, 38, 25, 25));
-        hero.add_animation_frame_up(IntRect(105, 38, 25, 25));
-        hero.add_standing_frame_up(IntRect(134, 38, 25, 25));
-        hero.add_animation_frame_down(IntRect(9, 5, 25, 25));
-        hero.add_animation_frame_down(IntRect(41, 5, 25, 25));
-        hero.add_animation_frame_down(IntRect(73, 5, 25, 25));
-        hero.add_animation_frame_down(IntRect(105, 5, 25, 25));
-        hero.add_standing_frame_down(IntRect(134, 5, 25, 25));
-        hero.setPosition(200, 200);
-        hero.setScale(2, 2);
-        hero.setTextureRect(IntRect(134, 5, 25, 25)); // Corrected the texture rectangle dimensions
+        hero.add_animation_frame_right(IntRect(9, 70, 14, 25));
+        hero.add_animation_frame_right(IntRect(41, 70, 14, 25));
+        hero.add_animation_frame_right(IntRect(73, 70, 14, 25));
+        hero.add_animation_frame_right(IntRect(105, 70, 14, 25));
+        hero.add_standing_frame_right(IntRect(134, 70, 14, 25));
+
+        hero.add_animation_frame_left(IntRect(10, 102, 14, 25));
+        hero.add_animation_frame_left(IntRect(41, 102, 14, 25));
+        hero.add_animation_frame_left(IntRect(73, 102, 14, 25));
+        hero.add_animation_frame_left(IntRect(105, 102, 14, 25));
+        hero.add_standing_frame_left(IntRect(134, 102, 14, 25));
+
+        hero.add_animation_frame_up(IntRect(10, 38, 14, 25));
+        hero.add_animation_frame_up(IntRect(41, 38, 14, 25));
+        hero.add_animation_frame_up(IntRect(73, 38, 14, 25));
+        hero.add_animation_frame_up(IntRect(105, 38, 14, 25));
+        hero.add_standing_frame_up(IntRect(134, 38, 14, 25));
+
+        hero.add_animation_frame_down(IntRect(9, 6, 14, 25));
+        hero.add_animation_frame_down(IntRect(41, 6, 14, 25));
+        hero.add_animation_frame_down(IntRect(73, 6, 14, 25));
+        hero.add_animation_frame_down(IntRect(105, 6, 14, 25));
+        hero.add_standing_frame_down(IntRect(134, 6, 14, 25));
+
+        hero.setScale(2,2);
+        hero.setPosition(0, 0);
     }
 
     void handleInput() {
         sf::Event event;
         while (window.pollEvent(event)) {
-            if (event.type == sf::Event::Closed)
+            if (event.type == sf::Event::Closed) {
                 window.close();
+            }
 
             if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Enter) {
                 gameStarted = true;
@@ -254,17 +267,18 @@ private:
         }
 
         if (gameStarted) {
+            FloatRect bounds(0, 0, window_width, window_height);
             if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left)) {
-                hero.move(-move_speed, 0);
+                hero.moveWithCollision(bounds, -move_speed, 0);
             }
             if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right)) {
-                hero.move(move_speed, 0);
+                hero.moveWithCollision(bounds, move_speed, 0);
             }
             if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up)) {
-                hero.move(0, -move_speed);
+                hero.moveWithCollision(bounds, 0, -move_speed);
             }
             if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down)) {
-                hero.move(0, move_speed);
+                hero.moveWithCollision(bounds, 0, move_speed);
             }
         }
     }
