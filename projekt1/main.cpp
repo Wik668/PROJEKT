@@ -4,9 +4,83 @@
 #include <vector>
 #include <SFML/Audio.hpp>
 #include <SFML/Audio/SoundBuffer.hpp>
+#include <sstream>
+#include <iomanip>
 
 using namespace std;
 using namespace sf;
+
+class Zombie : public Sprite {
+private:
+    vector<IntRect> framesRight;
+    vector<IntRect> framesLeft;
+    vector<IntRect> framesUp;
+    vector<IntRect> framesDown;
+    int currentFrame;
+    int animationFps;
+    Time frameTime;
+    Clock clock;
+    enum Direction { Up, Down, Left, Right } direction;
+
+public:
+    Zombie(int fps) : currentFrame(0), animationFps(fps), direction(Right) {}
+
+    void add_animation_frame_right(const IntRect& frame) {
+        framesRight.push_back(frame);
+    }
+
+    void add_animation_frame_left(const IntRect& frame) {
+        framesLeft.push_back(frame);
+    }
+
+    void add_animation_frame_up(const IntRect& frame) {
+        framesUp.push_back(frame);
+    }
+
+    void add_animation_frame_down(const IntRect& frame) {
+        framesDown.push_back(frame);
+    }
+
+    void add_standing_frame_right(const IntRect& frame) {
+        framesRight.push_back(frame);
+    }
+
+    void add_standing_frame_left(const IntRect& frame) {
+        framesLeft.push_back(frame);
+    }
+
+    void add_standing_frame_up(const IntRect& frame) {
+        framesUp.push_back(frame);
+    }
+
+    void add_standing_frame_down(const IntRect& frame) {
+        framesDown.push_back(frame);
+    }
+
+    void step() {
+        frameTime += clock.restart();
+        Time timePerFrame = seconds(1.0f / animationFps);
+
+        while (frameTime >= timePerFrame) {
+            frameTime -= timePerFrame;
+            currentFrame = (currentFrame + 1) % (getFrames().size() - 1); // Skip standing frame
+            setTextureRect(getFrames()[currentFrame]);
+        }
+    }
+
+
+private:
+    const vector<IntRect>& getFrames() const {
+        switch (direction) {
+        case Right: return framesRight;
+        case Left: return framesLeft;
+        case Up: return framesUp;
+        case Down: return framesDown;
+        }
+        // To avoid warning, returning framesRight as a default case.
+        return framesRight;
+    }
+};
 
 class AnimatedSprite : public Sprite {
 private:
@@ -65,11 +139,11 @@ public:
 
             while (frameTime >= timePerFrame) {
                 frameTime -= timePerFrame;
-                currentFrame = (currentFrame + 1) % (getFrames().size() - 1); // Odejmujemy 1, aby pominąć klatkę stojącą
+                currentFrame = (currentFrame + 1) % (getFrames().size() - 1); // Skip standing frame
                 setTextureRect(getFrames()[currentFrame]);
             }
         } else {
-            setTextureRect(getFrames().back()); // Ustawiamy ostatnią klatkę jako klatkę stojącą
+            setTextureRect(getFrames().back()); // Set the last frame as standing frame
         }
     }
 
@@ -152,6 +226,8 @@ public:
         stageText.setCharacterSize(24);
         stageText.setFillColor(sf::Color::White);
         stageText.setPosition(250, 400);
+
+        updateSelection();
     }
 
     void playSound() {
@@ -171,50 +247,69 @@ public:
 
     void moveSelectionUp() {
         selectedSurvival = true;
-        survivalText.setFillColor(sf::Color::Red);
-        stageText.setFillColor(sf::Color::White);
+        updateSelection();
     }
 
     void moveSelectionDown() {
         selectedSurvival = false;
-        survivalText.setFillColor(sf::Color::White);
-        stageText.setFillColor(sf::Color::Red);
+        updateSelection();
     }
 
     bool isSurvivalSelected() const {
         return selectedSurvival;
     }
+
+private:
+    void updateSelection() {
+        if (selectedSurvival) {
+            survivalText.setFillColor(sf::Color::Red);
+            stageText.setFillColor(sf::Color::White);
+        } else {
+            survivalText.setFillColor(sf::Color::White);
+            stageText.setFillColor(sf::Color::Red);
+        }
+    }
 };
 
 class Game {
+    // Other class members
+    vector<Zombie> zombies;
+    sf::Texture zombie_texture;
 private:
     int window_width = 800;
     int window_height = 600;
     sf::RenderWindow window;
     AnimatedSprite hero;
     sf::Texture character_texture;
-    sf::Texture background_image;
+    sf::Texture background_texture;
     sf::Sprite background_sprite;
     Menu menu;
     bool gameStarted;
-    bool survivalMode; // Nowa zmienna do przechowywania wybranego trybu gry
+    bool survivalMode; // New variable to store the selected game mode
     float move_speed;
+    sf::Clock survivalClock; // Clock for the Survival Mode timer
+    sf::Text timerText;
+    sf::Font font;
 
     void loadResources() {
-        if (!background_image.loadFromFile("background.png")) {
+        if (!background_texture.loadFromFile("background.png")) {
             cout << "Nie udało się wczytać tekstury tła" << endl;
             exit(1);
         }
-
-        background_image.setRepeated(true);
-        background_sprite.setTexture(background_image);
-        background_sprite.setTextureRect(IntRect(0, 0, window_width, window_height));
-
-        if (!character_texture.loadFromFile("walk.png")) {
-            cout << "Nie udało się wczytać tekstury postaci" << endl;
+        if (!character_texture.loadFromFile("Walk.png")) {
+            cout << "Nie udało się wczytać tekstury bohatera" << endl;
+            exit(1);
+        }
+        if (!zombie_texture.loadFromFile("Walk_Zombie.png")) {
+            cout << "Nie udało się wczytać tekstury zombie" << endl;
             exit(1);
         }
 
+        // No need to scale the background sprite anymore
+        background_sprite.setTexture(background_texture);
+    }
+
+    void initializeHero() {
         hero.setTexture(character_texture);
         hero.add_animation_frame_right(IntRect(9, 70, 14, 25));
         hero.add_animation_frame_right(IntRect(41, 70, 14, 25));
@@ -242,76 +337,169 @@ private:
 
         hero.setScale(2,2);
         hero.setPosition(0, 0);
+
     }
 
-    void handleInput() {
-        sf::Event event;
-        while (window.pollEvent(event)) {
-            if (event.type == sf::Event::Closed) {
-                window.close();
-            }
+    void initializeZombies() {
+        for (int i = 0; i < 5; ++i) {
+            Zombie zombie(5);
+            zombie.setTexture(zombie_texture);
 
-            if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Enter) {
-                gameStarted = true;
-                survivalMode = menu.isSurvivalSelected();
-                menu.stopSound();
-            }
+            zombie.add_animation_frame_right(IntRect(11, 69, 12, 26));
+            zombie.add_animation_frame_right(IntRect(42, 69, 12, 26));
+            zombie.add_standing_frame_right(IntRect(74, 69, 12, 26));
+            zombie.add_animation_frame_right(IntRect(107, 69, 12, 26));
+            zombie.add_animation_frame_right(IntRect(140, 69, 12, 26));
+            zombie.add_animation_frame_right(IntRect(173, 69, 12, 26));
+            zombie.add_animation_frame_right(IntRect(204, 69, 12, 26));
+            zombie.add_standing_frame_right(IntRect(236, 69, 12, 26));
+            zombie.add_animation_frame_right(IntRect(269, 69, 12, 26));
+            zombie.add_animation_frame_right(IntRect(300, 69, 12, 26));
 
-            if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Up) {
-                menu.moveSelectionUp();
-            }
+            zombie.add_standing_frame_left(IntRect(9, 101, 12, 26));
+            zombie.add_animation_frame_left(IntRect(41, 101, 12, 26));
+            zombie.add_animation_frame_left(IntRect(72, 101, 12, 26));
+            zombie.add_standing_frame_left(IntRect(104, 101, 12, 26));
+            zombie.add_animation_frame_left(IntRect(136, 101, 12, 26));
+            zombie.add_animation_frame_left(IntRect(166, 101, 12, 26));
+            zombie.add_animation_frame_left(IntRect(199, 101, 12, 26));
+            zombie.add_standing_frame_left(IntRect(230, 101, 12, 26));
+            zombie.add_animation_frame_left(IntRect(262, 101, 12, 26));
+            zombie.add_animation_frame_left(IntRect(296, 101, 12, 26));
 
-            if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Down) {
-                menu.moveSelectionDown();
-            }
+            zombie.add_standing_frame_up(IntRect(10, 0, 12, 26));
+            zombie.add_animation_frame_up(IntRect(42, 0, 12, 26));
+            zombie.add_animation_frame_up(IntRect(74, 0, 12, 26));
+            zombie.add_standing_frame_up(IntRect(106, 0, 12, 26));
+            zombie.add_animation_frame_up(IntRect(137, 0, 12, 26));
+            zombie.add_animation_frame_up(IntRect(168, 0, 12, 26));
+            zombie.add_animation_frame_up(IntRect(200, 0, 12, 26));
+            zombie.add_standing_frame_up(IntRect(231, 0, 12, 26));
+            zombie.add_animation_frame_up(IntRect(264, 0, 12, 26));
+            zombie.add_animation_frame_up(IntRect(297, 0, 12, 26));
+
+            zombie.add_animation_frame_down(IntRect(10, 37, 12, 26));
+            zombie.add_animation_frame_down(IntRect(42, 37, 12, 26));
+            zombie.add_standing_frame_down(IntRect(74, 37, 12, 26));
+            zombie.add_animation_frame_down(IntRect(106, 37, 12, 26));
+            zombie.add_animation_frame_down(IntRect(137, 37, 12, 26));
+            zombie.add_animation_frame_down(IntRect(168, 37, 12, 26));
+            zombie.add_animation_frame_down(IntRect(200, 37, 12, 26));
+            zombie.add_standing_frame_down(IntRect(231, 37, 12, 26));
+            zombie.add_animation_frame_down(IntRect(264, 37, 12, 26));
+            zombie.add_animation_frame_down(IntRect(297, 37, 12, 26));
+
+
+
+
+
+            // Repeat for other directions...
+
+            zombie.setScale(2, 2);
+            zombie.setPosition(i * 100, 200);  // Example positions
+            zombies.push_back(zombie);
         }
+    }
 
-        if (gameStarted) {
-            FloatRect bounds(0, 0, window_width, window_height);
-            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left)) {
-                hero.moveWithCollision(bounds, -move_speed, 0);
-            }
-            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right)) {
-                hero.moveWithCollision(bounds, move_speed, 0);
-            }
-            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up)) {
-                hero.moveWithCollision(bounds, 0, -move_speed);
-            }
-            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down)) {
-                hero.moveWithCollision(bounds, 0, move_speed);
+public:
+    Game()
+        : window(sf::VideoMode(window_width, window_height), "Game Window"),
+        hero(5), gameStarted(false), move_speed(0.1f) {
+        loadResources();
+        initializeHero();
+        initializeZombies();
+        background_sprite.setTexture(background_texture);
+        if (!font.loadFromFile("arial.ttf")) {
+            std::cout << "Nie udało się wczytać czcionki" << std::endl;
+            exit(1);
+        }
+        timerText.setFont(font);
+        timerText.setCharacterSize(24);
+        timerText.setFillColor(sf::Color::White);
+        timerText.setPosition(10, 10);
+    }
+
+    void run() {
+        menu.playSound();
+        while (window.isOpen()) {
+            handleEvents();
+            update();
+            render();
+        }
+    }
+
+    void handleEvents() {
+        Event event;
+        while (window.pollEvent(event)) {
+            if (event.type == Event::Closed) {
+                window.close();
+            } else if (event.type == Event::KeyPressed) {
+                if (event.key.code == Keyboard::Escape) {
+                    window.close();
+                } else if (!gameStarted) {
+                    if (event.key.code == Keyboard::Enter) {
+                        gameStarted = true;
+                        survivalMode = menu.isSurvivalSelected(); // Set the selected game mode
+                        menu.stopSound();
+                        survivalClock.restart();
+                    } else if (event.key.code == Keyboard::Up) {
+                        menu.moveSelectionUp();
+                    } else if (event.key.code == Keyboard::Down) {
+                        menu.moveSelectionDown();
+                    }
+                }
             }
         }
     }
 
     void update() {
         if (gameStarted) {
+            FloatRect bounds(0, 0, window_width, window_height);
+            if (Keyboard::isKeyPressed(Keyboard::Left)) {
+                hero.moveWithCollision(bounds, -move_speed, 0);
+            } else if (Keyboard::isKeyPressed(Keyboard::Right)) {
+                hero.moveWithCollision(bounds, move_speed, 0);
+            } else if (Keyboard::isKeyPressed(Keyboard::Up)) {
+                hero.moveWithCollision(bounds, 0, -move_speed);
+            } else if (Keyboard::isKeyPressed(Keyboard::Down)) {
+                hero.moveWithCollision(bounds, 0, move_speed);
+            }
             hero.step();
+
+            for (auto& zombie : zombies) {
+                zombie.step(); // Update each zombie's animation
+            }
+
+            if (survivalMode) {
+                Time elapsed = survivalClock.getElapsedTime();
+                std::stringstream ss;
+                ss << "Survival Time: " << std::fixed << std::setprecision(1) << elapsed.asSeconds() << " seconds";
+                timerText.setString(ss.str());
+            }
         }
     }
 
     void render() {
-        window.clear(sf::Color::Black);
-        if (!gameStarted) {
-            menu.draw(window);
-        } else {
-            window.draw(background_sprite);
+        window.clear();
+        if (gameStarted) {
+            // Draw the repeating background
+            for (int x = 0; x < window_width; x += background_texture.getSize().x) {
+                for (int y = 0; y < window_height; y += background_texture.getSize().y) {
+                    background_sprite.setPosition(x, y);
+                    window.draw(background_sprite);
+                }
+            }
             window.draw(hero);
+            for (auto& zombie : zombies) {
+                window.draw(zombie); // Draw each zombie
+            }
+            if (survivalMode) {
+                window.draw(timerText); // Draw the timer text if in Survival Mode
+            }
+        } else {
+            menu.draw(window);
         }
         window.display();
-    }
-
-public:
-    Game() : window(sf::VideoMode(window_width, window_height), "Nasza GRA"), hero(7), gameStarted(false), move_speed(0.1f) {
-        loadResources();
-        menu.playSound();
-    }
-
-    void run() {
-        while (window.isOpen()) {
-            handleInput();
-            update();
-            render();
-        }
     }
 };
 
