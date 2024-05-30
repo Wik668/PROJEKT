@@ -7,106 +7,15 @@
 #include <sstream>
 #include <iomanip>
 #include <SFML/System/Vector2.hpp> // Include the necessary header
-#include <cmath>
-#include "zombie.h"
+#include "Zombie.h" // Include the Zombie header
+
+#include "utils.h"
 using namespace std;
 using namespace sf;
 
 
-sf::Vector2f normalize(sf::Vector2f vec) {
-    float length = std::sqrt(vec.x * vec.x + vec.y * vec.y);
-    if (length != 0) {
-        return sf::Vector2f(vec.x / length, vec.y / length);
-    } else {
-        return sf::Vector2f(0, 0);
-    }
-}
-
-// class Zombie : public Sprite {
-// private:
-//     vector<IntRect> framesRight;
-//     vector<IntRect> framesLeft;
-//     vector<IntRect> framesUp;
-//     vector<IntRect> framesDown;
-//     int currentFrame;
-//     int animationFps;
-//     Time frameTime;
-//     Clock clock;
-//     enum Direction { Up, Down, Left, Right } direction;
 
 
-// public:
-//     void moveWithCollision(const sf::FloatRect& bounds, float offsetX, float offsetY) {
-//         sf::Vector2f oldPosition = getPosition();
-//         sf::Sprite::move(offsetX, offsetY);
-//         sf::FloatRect spriteBounds = getGlobalBounds();
-
-//         if (spriteBounds.left < bounds.left ||
-//             spriteBounds.top < bounds.top ||
-//             spriteBounds.left + spriteBounds.width > bounds.left + bounds.width ||
-//             spriteBounds.top + spriteBounds.height > bounds.top + bounds.height) {
-//             setPosition(oldPosition);
-//         }
-//     }
-
-//     Zombie(int fps) : currentFrame(0), animationFps(fps), direction(Right) {}
-
-//     void add_animation_frame_right(const IntRect& frame) {
-//         framesRight.push_back(frame);
-//     }
-
-//     void add_animation_frame_left(const IntRect& frame) {
-//         framesLeft.push_back(frame);
-//     }
-
-//     void add_animation_frame_up(const IntRect& frame) {
-//         framesUp.push_back(frame);
-//     }
-
-//     void add_animation_frame_down(const IntRect& frame) {
-//         framesDown.push_back(frame);
-//     }
-
-//     void add_standing_frame_right(const IntRect& frame) {
-//         framesRight.push_back(frame);
-//     }
-
-//     void add_standing_frame_left(const IntRect& frame) {
-//         framesLeft.push_back(frame);
-//     }
-
-//     void add_standing_frame_up(const IntRect& frame) {
-//         framesUp.push_back(frame);
-//     }
-
-//     void add_standing_frame_down(const IntRect& frame) {
-//         framesDown.push_back(frame);
-//     }
-
-//     void step() {
-//         frameTime += clock.restart();
-//         Time timePerFrame = seconds(1.0f / animationFps);
-
-//         while (frameTime >= timePerFrame) {
-//             frameTime -= timePerFrame;
-//             currentFrame = (currentFrame + 1) % (getFrames().size() - 1); // Skip standing frame
-//             setTextureRect(getFrames()[currentFrame]);
-//         }
-//     }
-
-
-// private:
-//     const vector<IntRect>& getFrames() const {
-//         switch (direction) {
-//         case Right: return framesRight;
-//         case Left: return framesLeft;
-//         case Up: return framesUp;
-//         case Down: return framesDown;
-//         }
-//         // To avoid warning, returning framesRight as a default case.
-//         return framesRight;
-//     }
-// };
 
 class AnimatedSprite : public Sprite {
 private:
@@ -303,6 +212,8 @@ class Game {
     vector<Zombie> zombies;
     sf::Texture zombie_texture;
 private:
+    float health;  // Add this line for the health attribute
+    sf::Text healthText;
     int window_width = 800;
     int window_height = 600;
     sf::RenderWindow window;
@@ -453,8 +364,8 @@ private:
 public:
 
     Game()
-        : window(sf::VideoMode(window_width, window_height), "Game Window"),
-        hero(5), gameStarted(false), move_speed(0.1f) { // Initialize move_speed here
+        : health(100),
+        window(sf::VideoMode(window_width, window_height), "Game Window"), hero(5), gameStarted(false), move_speed(0.1f) { // Initialize health here
         loadResources();
         initializeHero();
         initializeZombies();
@@ -467,7 +378,26 @@ public:
         timerText.setCharacterSize(24);
         timerText.setFillColor(sf::Color::White);
         timerText.setPosition(10, 10);
+
+        healthText.setFont(font);  // Setup healthText
+        healthText.setCharacterSize(24);
+        healthText.setFillColor(sf::Color::White);
+        healthText.setPosition(10, window_height - 30);  // Position it in the lower left corner
+        updateHealthText();  // Initialize the health text
     }
+    void updateHealthText() {
+        healthText.setString("HP: " + std::to_string(health));
+    }
+    float damage=0.01;
+    void checkHeroZombieCollisions() {
+        for (auto& zombie : zombies) {
+            if (checkCollision(hero, zombie)) {
+                health -= damage;  // Reduce health by 10 on collision
+                updateHealthText();
+            }
+        }
+    }
+
 
     void run() {
         menu.playSound();
@@ -528,13 +458,24 @@ public:
                 direction = normalize(direction); // Normalize the vector to get a unit vector
 
                 // Move the zombie towards the player
-                float moveX = direction.x * move_speed*0.2;
-                float moveY = direction.y * move_speed*0.2;
+                float moveX = direction.x * move_speed * 0.2;
+                float moveY = direction.y * move_speed * 0.2;
                 zombie.moveWithCollision(bounds, moveX, moveY);
 
                 // Update zombie animation
                 zombie.step();
             }
+
+            // Check for collisions between zombies
+            for (size_t i = 0; i < zombies.size(); ++i) {
+                for (size_t j = i + 1; j < zombies.size(); ++j) {
+                    if (checkCollision(zombies[i], zombies[j])) {
+                        resolveCollision(zombies[i], zombies[j]);
+                    }
+                }
+            }
+
+            checkHeroZombieCollisions();  // Check for collisions between hero and zombies
 
             if (survivalMode) {
                 Time elapsed = survivalClock.getElapsedTime();
@@ -544,6 +485,9 @@ public:
             }
         }
     }
+
+
+
 
     void render() {
         window.clear();
@@ -562,10 +506,43 @@ public:
             if (survivalMode) {
                 window.draw(timerText); // Draw the timer text if in Survival Mode
             }
+            window.draw(healthText);  // Draw the health text
         } else {
             menu.draw(window);
         }
         window.display();
+    }
+
+
+
+    bool checkCollision(const sf::Sprite& sprite1, const sf::Sprite& sprite2) {
+        return sprite1.getGlobalBounds().intersects(sprite2.getGlobalBounds());
+    }
+
+    void resolveCollision(sf::Sprite& sprite1, sf::Sprite& sprite2) {
+        sf::FloatRect bounds1 = sprite1.getGlobalBounds();
+        sf::FloatRect bounds2 = sprite2.getGlobalBounds();
+
+
+
+        float overlapLeft = bounds1.left + bounds1.width - bounds2.left;
+        float overlapRight = bounds2.left + bounds2.width - bounds1.left;
+        float overlapTop = bounds1.top + bounds1.height - bounds2.top;
+        float overlapBottom = bounds2.top + bounds2.height - bounds1.top;
+
+        bool fromLeft = abs(overlapLeft) < abs(overlapRight);
+        bool fromTop = abs(overlapTop) < abs(overlapBottom);
+
+        float overlapX = fromLeft ? overlapLeft : overlapRight;
+        float overlapY = fromTop ? overlapTop : overlapBottom;
+
+        if (abs(overlapX) < abs(overlapY)) {
+            sprite1.move(-overlapX / 2, 0);
+            sprite2.move(overlapX / 2, 0);
+        } else {
+            sprite1.move(0, -overlapY / 2);
+            sprite2.move(0, overlapY / 2);
+        }
     }
 
 };

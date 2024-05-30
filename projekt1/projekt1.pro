@@ -16,4 +16,5 @@ CONFIG(debug, debug|release){
 }
 
 HEADERS += \
+    utils.h \
     zombie.h
