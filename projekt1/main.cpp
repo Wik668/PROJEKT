@@ -8,6 +8,7 @@
 #include <iomanip>
 #include <SFML/System/Vector2.hpp> // Include the necessary header
 #include "Zombie.h" // Include the Zombie header
+#include "Bullet.h"
 
 #include "utils.h"
 using namespace std;
@@ -226,11 +227,21 @@ private:
     sf::Sound sound;
     Menu menu;
     bool gameStarted;
-    bool survivalMode; // New variable to store the selected game mode
+    bool survivalMode;
+    bool gameEnded;    // New variable to store the selected game mode
     float move_speed;
     sf::Clock survivalClock; // Clock for the Survival Mode timer
     sf::Text timerText;
     sf::Font font;
+    sf::Texture bullet_texture;
+    std::vector<Bullet> bullets;
+    float bullet_speed;
+
+
+
+
+    sf::Text endGameText; // Text for the end game message
+
 
     void loadResources() {
         if (!background_texture.loadFromFile("puste.png")) {
@@ -247,6 +258,10 @@ private:
         }
         if (!buffer.loadFromFile("menu_music.wav")) {
             std::cout << "Nie udało się wczytać dźwięku menu" << std::endl;
+        }
+        if (!bullet_texture.loadFromFile("bullet.png")) {
+            std::cout << "Nie udało się wczytać tekstury pocisku" << std::endl;
+            exit(1);
         }
 
         sound.setBuffer(buffer);
@@ -362,10 +377,9 @@ private:
     }
 
 public:
-
     Game()
-        : health(100),
-        window(sf::VideoMode(window_width, window_height), "Game Window"), hero(5), gameStarted(false), move_speed(0.1f) { // Initialize health here
+        : health(100), window(sf::VideoMode(window_width, window_height), "Game Window"),
+        hero(5), gameStarted(false), gameEnded(false), move_speed(0.1f), bullet_speed(0.1f) {  // Set bullet speed
         loadResources();
         initializeHero();
         initializeZombies();
@@ -379,25 +393,40 @@ public:
         timerText.setFillColor(sf::Color::White);
         timerText.setPosition(10, 10);
 
-        healthText.setFont(font);  // Setup healthText
+        healthText.setFont(font);
         healthText.setCharacterSize(24);
         healthText.setFillColor(sf::Color::White);
-        healthText.setPosition(10, window_height - 30);  // Position it in the lower left corner
-        updateHealthText();  // Initialize the health text
+        healthText.setPosition(10, window_height - 30);
+        updateHealthText();
+
+        endGameText.setFont(font);
+        endGameText.setCharacterSize(48);
+        endGameText.setFillColor(sf::Color::Red);
+        endGameText.setString("Game Over");
+        endGameText.setPosition(window_width / 2 - endGameText.getGlobalBounds().width / 2, window_height / 2 - endGameText.getGlobalBounds().height / 2);
     }
+
     void updateHealthText() {
-        healthText.setString("HP: " + std::to_string(health));
+        std::stringstream ss;
+        ss << std::fixed << std::setprecision(1) << health;
+        healthText.setString("HP: " + ss.str());
     }
-    float damage=0.01;
+
+
+    float damage = 0.01;
+
     void checkHeroZombieCollisions() {
         for (auto& zombie : zombies) {
             if (checkCollision(hero, zombie)) {
-                health -= damage;  // Reduce health by 10 on collision
+                health -= damage;
                 updateHealthText();
+                if (health <= 0) {
+                    gameEnded = true;
+                    gameMusic.stop();
+                }
             }
         }
     }
-
 
     void run() {
         menu.playSound();
@@ -410,34 +439,68 @@ public:
         gameMusic.stop();
     }
 
+    void shootBullet() {
+        sf::Vector2f heroCenter = hero.getPosition() + sf::Vector2f(hero.getGlobalBounds().width / 2, hero.getGlobalBounds().height / 2);
+        sf::Vector2i mousePosition = sf::Mouse::getPosition(window);
+        sf::Vector2f target = window.mapPixelToCoords(mousePosition);
+
+        sf::Vector2f direction = normalize(target - heroCenter);
+        Bullet bullet(bullet_texture, direction, bullet_speed);
+        bullet.setPosition(heroCenter);
+
+        bullets.push_back(bullet);
+    }
+
+
+    void checkBulletCollisions() {
+        for (auto it = bullets.begin(); it != bullets.end();) {
+            bool bulletErased = false;
+            for (auto zombieIt = zombies.begin(); zombieIt != zombies.end(); ++zombieIt) {
+                if (checkCollision(*it, *zombieIt)) {
+                    it = bullets.erase(it);
+                    zombieIt = zombies.erase(zombieIt);
+                    bulletErased = true;
+                    break;
+                }
+            }
+            if (!bulletErased) {
+                ++it;
+            }
+        }
+    }
+
     void handleEvents() {
-        Event event;
+        sf::Event event;
         while (window.pollEvent(event)) {
-            if (event.type == Event::Closed) {
+            if (event.type == sf::Event::Closed) {
                 window.close();
-            } else if (event.type == Event::KeyPressed) {
-                if (event.key.code == Keyboard::Escape) {
+            } else if (event.type == sf::Event::KeyPressed) {
+                if (event.key.code == sf::Keyboard::Escape) {
                     window.close();
-                } else if (!gameStarted) {
-                    if (event.key.code == Keyboard::Enter) {
+                } else if (!gameStarted && !gameEnded) {
+                    if (event.key.code == sf::Keyboard::Enter) {
                         gameStarted = true;
-                        survivalMode = menu.isSurvivalSelected(); // Set the selected game mode
+                        survivalMode = menu.isSurvivalSelected();
                         menu.stopSound();
                         survivalClock.restart();
-                        gameMusic.setLoop(true); // Ustaw muzykę na zapętlanie //DODANY
-                        gameMusic.play();//dodany
-                    } else if (event.key.code == Keyboard::Up) {
+                        gameMusic.setLoop(true);
+                        gameMusic.play();
+                    } else if (event.key.code == sf::Keyboard::Up) {
                         menu.moveSelectionUp();
-                    } else if (event.key.code == Keyboard::Down) {
+                    } else if (event.key.code == sf::Keyboard::Down) {
                         menu.moveSelectionDown();
                     }
+                } else if (event.key.code == sf::Keyboard::Space) {
+                    shootBullet();
+                } else if (gameEnded && event.key.code == sf::Keyboard::Enter) {
+                    window.close(); // Optionally restart the game or close the window
                 }
             }
         }
     }
 
     void update() {
-        if (gameStarted) {
+        if (gameStarted && !gameEnded) {
             FloatRect bounds(0, 0, window_width, window_height);
             if (Keyboard::isKeyPressed(Keyboard::Left)) {
                 hero.moveWithCollision(bounds, -move_speed, 0);
@@ -450,23 +513,18 @@ public:
             }
             hero.step();
 
-            // Calculate direction vector towards the player
             Vector2f playerPosition = hero.getPosition();
             for (auto& zombie : zombies) {
                 Vector2f zombiePosition = zombie.getPosition();
                 Vector2f direction = playerPosition - zombiePosition;
-                direction = normalize(direction); // Normalize the vector to get a unit vector
+                direction = normalize(direction);
 
-                // Move the zombie towards the player
                 float moveX = direction.x * move_speed * 0.2;
                 float moveY = direction.y * move_speed * 0.2;
                 zombie.moveWithCollision(bounds, moveX, moveY);
-
-                // Update zombie animation
                 zombie.step();
             }
 
-            // Check for collisions between zombies
             for (size_t i = 0; i < zombies.size(); ++i) {
                 for (size_t j = i + 1; j < zombies.size(); ++j) {
                     if (checkCollision(zombies[i], zombies[j])) {
@@ -475,7 +533,7 @@ public:
                 }
             }
 
-            checkHeroZombieCollisions();  // Check for collisions between hero and zombies
+            checkHeroZombieCollisions();
 
             if (survivalMode) {
                 Time elapsed = survivalClock.getElapsedTime();
@@ -483,16 +541,19 @@ public:
                 ss << "Survival Time: " << std::fixed << std::setprecision(1) << elapsed.asSeconds() << " seconds";
                 timerText.setString(ss.str());
             }
+
+            for (auto& bullet : bullets) {
+                bullet.update();
+            }
+
+            checkBulletCollisions();
         }
     }
-
-
 
 
     void render() {
         window.clear();
         if (gameStarted) {
-            // Draw the repeating background
             for (int x = 0; x < window_width; x += background_texture.getSize().x) {
                 for (int y = 0; y < window_height; y += background_texture.getSize().y) {
                     background_sprite.setPosition(x, y);
@@ -501,19 +562,23 @@ public:
             }
             window.draw(hero);
             for (auto& zombie : zombies) {
-                window.draw(zombie); // Draw each zombie
+                window.draw(zombie);
             }
             if (survivalMode) {
-                window.draw(timerText); // Draw the timer text if in Survival Mode
+                window.draw(timerText);
             }
-            window.draw(healthText);  // Draw the health text
+            window.draw(healthText);
+            if (gameEnded) {
+                window.draw(endGameText);
+            }
+            for (const auto& bullet : bullets) {
+                window.draw(bullet);
+            }
         } else {
             menu.draw(window);
         }
         window.display();
     }
-
-
 
     bool checkCollision(const sf::Sprite& sprite1, const sf::Sprite& sprite2) {
         return sprite1.getGlobalBounds().intersects(sprite2.getGlobalBounds());
@@ -522,8 +587,6 @@ public:
     void resolveCollision(sf::Sprite& sprite1, sf::Sprite& sprite2) {
         sf::FloatRect bounds1 = sprite1.getGlobalBounds();
         sf::FloatRect bounds2 = sprite2.getGlobalBounds();
-
-
 
         float overlapLeft = bounds1.left + bounds1.width - bounds2.left;
         float overlapRight = bounds2.left + bounds2.width - bounds1.left;

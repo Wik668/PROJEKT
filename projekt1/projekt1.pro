@@ -5,6 +5,7 @@ CONFIG -= qt
 CONFIG += gui
 
 SOURCES += \
+        bullet.cpp \
         main.cpp \
         zombie.cpp
 INCLUDEPATH += "C:/SFML-2.5.1/include"
@@ -16,5 +17,6 @@ CONFIG(debug, debug|release){
 }
 
 HEADERS += \
+    bullet.h \
     utils.h \
     zombie.h
