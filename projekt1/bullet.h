@@ -5,15 +5,13 @@
 
 class Bullet : public sf::Sprite {
 public:
-    Bullet(const sf::Texture& texture, const sf::Vector2f& direction, float speed);
+    Bullet(const sf::Texture& texture, const sf::Vector2f& direction, float speed, float angle);
 
     void update();
 
 private:
     sf::Vector2f direction;
     float speed;
-
-    void setRotationBasedOnDirection();
 };
 
 #endif // BULLET_H

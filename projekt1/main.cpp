@@ -236,6 +236,9 @@ private:
     sf::Texture bullet_texture;
     std::vector<Bullet> bullets;
     float bullet_speed;
+    sf::Text killCounterText; // Add this line
+    int zombiesKilled;
+    // Other class members
 
 
 
@@ -314,76 +317,76 @@ private:
         hero.setPosition(0, 0);
 
     }
-
     void initializeZombies() {
         for (int i = 0; i < 5; ++i) {
-            Zombie zombie(5);
-            zombie.setTexture(zombie_texture);
-
-            zombie.add_animation_frame_right(IntRect(11, 69, 12, 26));
-            zombie.add_animation_frame_right(IntRect(42, 69, 12, 26));
-            zombie.add_standing_frame_right(IntRect(74, 69, 12, 26));
-            zombie.add_animation_frame_right(IntRect(107, 69, 12, 26));
-            zombie.add_animation_frame_right(IntRect(140, 69, 12, 26));
-            zombie.add_animation_frame_right(IntRect(173, 69, 12, 26));
-            zombie.add_animation_frame_right(IntRect(204, 69, 12, 26));
-            zombie.add_standing_frame_right(IntRect(236, 69, 12, 26));
-            zombie.add_animation_frame_right(IntRect(269, 69, 12, 26));
-            zombie.add_animation_frame_right(IntRect(300, 69, 12, 26));
-
-            zombie.add_standing_frame_left(IntRect(9, 101, 12, 26));
-            zombie.add_animation_frame_left(IntRect(41, 101, 12, 26));
-            zombie.add_animation_frame_left(IntRect(72, 101, 12, 26));
-            zombie.add_standing_frame_left(IntRect(104, 101, 12, 26));
-            zombie.add_animation_frame_left(IntRect(136, 101, 12, 26));
-            zombie.add_animation_frame_left(IntRect(166, 101, 12, 26));
-            zombie.add_animation_frame_left(IntRect(199, 101, 12, 26));
-            zombie.add_standing_frame_left(IntRect(230, 101, 12, 26));
-            zombie.add_animation_frame_left(IntRect(262, 101, 12, 26));
-            zombie.add_animation_frame_left(IntRect(296, 101, 12, 26));
-
-            zombie.add_standing_frame_up(IntRect(10, 0, 12, 26));
-            zombie.add_animation_frame_up(IntRect(42, 0, 12, 26));
-            zombie.add_animation_frame_up(IntRect(74, 0, 12, 26));
-            zombie.add_standing_frame_up(IntRect(106, 0, 12, 26));
-            zombie.add_animation_frame_up(IntRect(137, 0, 12, 26));
-            zombie.add_animation_frame_up(IntRect(168, 0, 12, 26));
-            zombie.add_animation_frame_up(IntRect(200, 0, 12, 26));
-            zombie.add_standing_frame_up(IntRect(231, 0, 12, 26));
-            zombie.add_animation_frame_up(IntRect(264, 0, 12, 26));
-            zombie.add_animation_frame_up(IntRect(297, 0, 12, 26));
-
-            zombie.add_animation_frame_down(IntRect(10, 37, 12, 26));
-            zombie.add_animation_frame_down(IntRect(42, 37, 12, 26));
-            zombie.add_standing_frame_down(IntRect(74, 37, 12, 26));
-            zombie.add_animation_frame_down(IntRect(106, 37, 12, 26));
-            zombie.add_animation_frame_down(IntRect(137, 37, 12, 26));
-            zombie.add_animation_frame_down(IntRect(168, 37, 12, 26));
-            zombie.add_animation_frame_down(IntRect(200, 37, 12, 26));
-            zombie.add_standing_frame_down(IntRect(231, 37, 12, 26));
-            zombie.add_animation_frame_down(IntRect(264, 37, 12, 26));
-            zombie.add_animation_frame_down(IntRect(297, 37, 12, 26));
-
-
-
-
-
-            // Repeat for other directions...
-
-            zombie.setScale(2, 2);
-            zombie.setPosition(i * 100, 200);  // Example positions
-            zombies.push_back(zombie);
+            createZombie(i * 100, 200);  // Example positions
         }
     }
+
+    void createZombie(float x, float y) {
+        Zombie zombie(5);
+        zombie.setTexture(zombie_texture);
+
+        zombie.add_animation_frame_right(IntRect(11, 69, 14, 26));
+        zombie.add_animation_frame_right(IntRect(42, 69, 14, 26));
+        zombie.add_standing_frame_right(IntRect(74, 69, 14, 26));
+        zombie.add_animation_frame_right(IntRect(107, 69, 14, 26));
+        zombie.add_animation_frame_right(IntRect(140, 69, 14, 26));
+        zombie.add_animation_frame_right(IntRect(173, 69, 14, 26));
+        zombie.add_animation_frame_right(IntRect(204, 69, 14, 26));
+        zombie.add_standing_frame_right(IntRect(236, 69, 14, 26));
+        zombie.add_animation_frame_right(IntRect(269, 69, 14, 26));
+        zombie.add_animation_frame_right(IntRect(300, 69, 14, 26));
+
+        zombie.add_standing_frame_left(IntRect(9, 101, 12, 26));
+        zombie.add_animation_frame_left(IntRect(41, 101, 12, 26));
+        zombie.add_animation_frame_left(IntRect(72, 101, 12, 26));
+        zombie.add_standing_frame_left(IntRect(104, 101, 12, 26));
+        zombie.add_animation_frame_left(IntRect(136, 101, 12, 26));
+        zombie.add_animation_frame_left(IntRect(166, 101, 12, 26));
+        zombie.add_animation_frame_left(IntRect(199, 101, 12, 26));
+        zombie.add_standing_frame_left(IntRect(230, 101, 12, 26));
+        zombie.add_animation_frame_left(IntRect(262, 101, 12, 26));
+        zombie.add_animation_frame_left(IntRect(296, 101, 12, 26));
+
+        zombie.add_standing_frame_up(IntRect(10, 0, 12, 26));
+        zombie.add_animation_frame_up(IntRect(42, 0, 12, 26));
+        zombie.add_animation_frame_up(IntRect(74, 0, 12, 26));
+        zombie.add_standing_frame_up(IntRect(106, 0, 12, 26));
+        zombie.add_animation_frame_up(IntRect(137, 0, 12, 26));
+        zombie.add_animation_frame_up(IntRect(168, 0, 12, 26));
+        zombie.add_animation_frame_up(IntRect(200, 0, 12, 26));
+        zombie.add_standing_frame_up(IntRect(231, 0, 12, 26));
+        zombie.add_animation_frame_up(IntRect(264, 0, 12, 26));
+        zombie.add_animation_frame_up(IntRect(297, 0, 12, 26));
+
+        zombie.add_animation_frame_down(IntRect(10, 37, 12, 26));
+        zombie.add_animation_frame_down(IntRect(42, 37, 12, 26));
+        zombie.add_standing_frame_down(IntRect(74, 37, 12, 26));
+        zombie.add_animation_frame_down(IntRect(106, 37, 12, 26));
+        zombie.add_animation_frame_down(IntRect(137, 37, 12, 26));
+        zombie.add_animation_frame_down(IntRect(168, 37, 12, 26));
+        zombie.add_animation_frame_down(IntRect(200, 37, 12, 26));
+        zombie.add_standing_frame_down(IntRect(231, 37, 12, 26));
+        zombie.add_animation_frame_down(IntRect(264, 37, 12, 26));
+        zombie.add_animation_frame_down(IntRect(297, 37, 12, 26));
+
+        zombie.setScale(2, 2);
+        zombie.setPosition(x, y);
+        zombies.push_back(zombie);
+    }
+
+
 
 public:
     Game()
         : health(100), window(sf::VideoMode(window_width, window_height), "Game Window"),
-        hero(5), gameStarted(false), gameEnded(false), move_speed(0.1f), bullet_speed(0.1f) {  // Set bullet speed
+        hero(5), gameStarted(false), gameEnded(false), move_speed(0.1f), bullet_speed(0.5f), zombiesKilled(0) {
         loadResources();
         initializeHero();
         initializeZombies();
         background_sprite.setTexture(background_texture);
+
         if (!font.loadFromFile("arial.ttf")) {
             std::cout << "Nie udało się wczytać czcionki" << std::endl;
             exit(1);
@@ -404,7 +407,14 @@ public:
         endGameText.setFillColor(sf::Color::Red);
         endGameText.setString("Game Over");
         endGameText.setPosition(window_width / 2 - endGameText.getGlobalBounds().width / 2, window_height / 2 - endGameText.getGlobalBounds().height / 2);
+
+        killCounterText.setFont(font);
+        killCounterText.setCharacterSize(24);
+        killCounterText.setFillColor(sf::Color::White);
+        killCounterText.setPosition(window_width - 150, 10);
+        updateKillCounterText();
     }
+
 
     void updateHealthText() {
         std::stringstream ss;
@@ -445,11 +455,16 @@ public:
         sf::Vector2f target = window.mapPixelToCoords(mousePosition);
 
         sf::Vector2f direction = normalize(target - heroCenter);
-        Bullet bullet(bullet_texture, direction, bullet_speed);
+
+        // Obliczanie kąta w stopniach
+        float angle = std::atan2(direction.y, direction.x) * 180 / 3.14159265;
+
+        Bullet bullet(bullet_texture, direction, bullet_speed, angle);
         bullet.setPosition(heroCenter);
 
         bullets.push_back(bullet);
     }
+
 
 
     void checkBulletCollisions() {
@@ -460,6 +475,13 @@ public:
                     it = bullets.erase(it);
                     zombieIt = zombies.erase(zombieIt);
                     bulletErased = true;
+                    zombiesKilled++;
+                    updateKillCounterText();
+                    if (zombiesKilled % 5 == 0) {
+                        for (int i = 0; i < 5; ++i) {
+                            createZombie(rand() % window_width, rand() % window_height);
+                        }
+                    }
                     break;
                 }
             }
@@ -468,6 +490,8 @@ public:
             }
         }
     }
+
+
 
     void handleEvents() {
         sf::Event event;
@@ -502,13 +526,13 @@ public:
     void update() {
         if (gameStarted && !gameEnded) {
             FloatRect bounds(0, 0, window_width, window_height);
-            if (Keyboard::isKeyPressed(Keyboard::Left)) {
+            if (Keyboard::isKeyPressed(Keyboard::A)) {
                 hero.moveWithCollision(bounds, -move_speed, 0);
-            } else if (Keyboard::isKeyPressed(Keyboard::Right)) {
+            } else if (Keyboard::isKeyPressed(Keyboard::D)) {
                 hero.moveWithCollision(bounds, move_speed, 0);
-            } else if (Keyboard::isKeyPressed(Keyboard::Up)) {
+            } else if (Keyboard::isKeyPressed(Keyboard::W)) {
                 hero.moveWithCollision(bounds, 0, -move_speed);
-            } else if (Keyboard::isKeyPressed(Keyboard::Down)) {
+            } else if (Keyboard::isKeyPressed(Keyboard::S)) {
                 hero.moveWithCollision(bounds, 0, move_speed);
             }
             hero.step();
@@ -568,6 +592,7 @@ public:
                 window.draw(timerText);
             }
             window.draw(healthText);
+            window.draw(killCounterText); // Draw the kill counter text
             if (gameEnded) {
                 window.draw(endGameText);
             }
@@ -579,6 +604,13 @@ public:
         }
         window.display();
     }
+    void updateKillCounterText() {
+        std::stringstream ss;
+        ss << "Kills: " << zombiesKilled;
+        killCounterText.setString(ss.str());
+    }
+
+
 
     bool checkCollision(const sf::Sprite& sprite1, const sf::Sprite& sprite2) {
         return sprite1.getGlobalBounds().intersects(sprite2.getGlobalBounds());

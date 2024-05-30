@@ -1,19 +1,13 @@
 #include "Bullet.h"
-#include <cmath> // For std::atan2 and conversion to degrees
 
-Bullet::Bullet(const sf::Texture& texture, const sf::Vector2f& direction, float speed)
+Bullet::Bullet(const sf::Texture& texture, const sf::Vector2f& direction, float speed, float angle)
     : direction(direction), speed(speed) {
     setTexture(texture);
-    setRotationBasedOnDirection();
-    // Optionally set texture rect if using a part of a texture
-    // setTextureRect(sf::IntRect(0, 0, 10, 10));
+    setRotation(angle);  // Ustawienie rotacji
+    // Opcjonalnie można ustawić rect tekstury, jeśli używasz części tekstury
+     setTextureRect(sf::IntRect(44, 51, 33, 21));
 }
 
 void Bullet::update() {
     move(direction * speed);
-}
-
-void Bullet::setRotationBasedOnDirection() {
-    float angle = std::atan2(direction.y, direction.x) * 180 / 3.14159265;
-    setRotation(angle + 90); // +90 to adjust for the sprite's default orientation
 }

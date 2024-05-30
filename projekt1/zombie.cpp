@@ -1,4 +1,3 @@
-// Zombie.cpp
 #include "Zombie.h"
 #include <cmath>
 
@@ -21,41 +20,41 @@ void Zombie::moveWithCollision(const sf::FloatRect& bounds, float offsetX, float
     }
 }
 
-void Zombie::add_animation_frame_right(const IntRect& frame) {
+void Zombie::add_animation_frame_right(const sf::IntRect& frame) {
     framesRight.push_back(frame);
 }
 
-void Zombie::add_animation_frame_left(const IntRect& frame) {
+void Zombie::add_animation_frame_left(const sf::IntRect& frame) {
     framesLeft.push_back(frame);
 }
 
-void Zombie::add_animation_frame_up(const IntRect& frame) {
+void Zombie::add_animation_frame_up(const sf::IntRect& frame) {
     framesUp.push_back(frame);
 }
 
-void Zombie::add_animation_frame_down(const IntRect& frame) {
+void Zombie::add_animation_frame_down(const sf::IntRect& frame) {
     framesDown.push_back(frame);
 }
 
-void Zombie::add_standing_frame_right(const IntRect& frame) {
+void Zombie::add_standing_frame_right(const sf::IntRect& frame) {
     framesRight.push_back(frame);
 }
 
-void Zombie::add_standing_frame_left(const IntRect& frame) {
+void Zombie::add_standing_frame_left(const sf::IntRect& frame) {
     framesLeft.push_back(frame);
 }
 
-void Zombie::add_standing_frame_up(const IntRect& frame) {
+void Zombie::add_standing_frame_up(const sf::IntRect& frame) {
     framesUp.push_back(frame);
 }
 
-void Zombie::add_standing_frame_down(const IntRect& frame) {
+void Zombie::add_standing_frame_down(const sf::IntRect& frame) {
     framesDown.push_back(frame);
 }
 
 void Zombie::step() {
     frameTime += clock.restart();
-    Time timePerFrame = seconds(1.0f / animationFps);
+    sf::Time timePerFrame = sf::seconds(1.0f / animationFps);
 
     while (frameTime >= timePerFrame) {
         frameTime -= timePerFrame;
@@ -64,7 +63,7 @@ void Zombie::step() {
     }
 }
 
-const vector<IntRect>& Zombie::getFrames() const {
+const std::vector<sf::IntRect>& Zombie::getFrames() const {
     switch (direction) {
     case Right: return framesRight;
     case Left: return framesLeft;
