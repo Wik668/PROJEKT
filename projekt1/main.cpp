@@ -9,7 +9,7 @@
     #include <SFML/System/Vector2.hpp> // Include the necessary header
     #include "Zombie.h" // Include the Zombie header
     #include "Bullet.h"
-    #include"ninja.h"
+    #include"ninja.h"//ninja nowy przeciwnik
     #include "utils.h"
     using namespace std;
     using namespace sf;
