@@ -1,7 +1,7 @@
 #include "Zombie.h"
 #include <cmath>
 
-Zombie::Zombie(int fps) : currentFrame(0), animationFps(fps), direction(Right) {}
+Zombie::Zombie(int fps) : currentFrame(0), animationFps(fps), direction(Right), health(100) {}  // Initialize health to 100
 
 void Zombie::moveWithCollision(const sf::FloatRect& bounds, float offsetX, float offsetY) {
     sf::Vector2f oldPosition = getPosition();
@@ -72,4 +72,23 @@ const std::vector<sf::IntRect>& Zombie::getFrames() const {
     }
     // To avoid warning, returning framesRight as a default case.
     return framesRight;
+}
+
+// Health-related methods
+int Zombie::getHealth() const {
+    return health;
+}
+
+void Zombie::setHealth(int hp) {
+    health = hp;
+}
+
+void Zombie::takeDamage(int damage) {
+    health -= damage;
+    if (health < 0) health = 0;  // Ensure health doesn't go below 0
+}
+
+void Zombie::heal(int amount) {
+    health += amount;
+    // Optionally, you could add a maximum health limit
 }

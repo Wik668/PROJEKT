@@ -1,6 +1,6 @@
-// Zombie.h
 #ifndef ZOMBIE_H
 #define ZOMBIE_H
+
 #include "utils.h"
 #include <SFML/Graphics.hpp>
 #include <vector>
@@ -18,6 +18,7 @@ private:
     int animationFps;
     Time frameTime;
     Clock clock;
+    int health;  // Health attribute
 
     enum Direction { Up, Down, Left, Right } direction;
 
@@ -33,6 +34,12 @@ public:
     void add_standing_frame_up(const IntRect& frame);
     void add_standing_frame_down(const IntRect& frame);
     void step();
+
+    // Health-related methods
+    int getHealth() const;
+    void setHealth(int hp);
+    void takeDamage(int damage);
+    void heal(int amount);
 
 private:
     const vector<IntRect>& getFrames() const;
