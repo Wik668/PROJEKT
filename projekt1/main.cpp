@@ -64,12 +64,12 @@
         void add_standing_frame_down(const IntRect& frame) {
             framesDown.push_back(frame);
         }
-
+//naprawione warunki animacji od kiedy przeszliśmy na WSAD wcześniej były strzałki
         void step() {
-            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left) ||
-                sf::Keyboard::isKeyPressed(sf::Keyboard::Right) ||
-                sf::Keyboard::isKeyPressed(sf::Keyboard::Up) ||
-                sf::Keyboard::isKeyPressed(sf::Keyboard::Down)) {
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::A) ||
+                sf::Keyboard::isKeyPressed(sf::Keyboard::D) ||
+                sf::Keyboard::isKeyPressed(sf::Keyboard::W) ||
+                sf::Keyboard::isKeyPressed(sf::Keyboard::S)) {
                 frameTime += clock.restart();
                 Time timePerFrame = seconds(1.0f / animationFps);
 
