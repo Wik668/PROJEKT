@@ -7,6 +7,7 @@ CONFIG += gui
 SOURCES += \
         bullet.cpp \
         main.cpp \
+        ninja.cpp \
         zombie.cpp
 INCLUDEPATH += "C:/SFML-2.5.1/include"
 LIBS += -L"C:/SFML-2.5.1/lib"
@@ -18,5 +19,6 @@ CONFIG(debug, debug|release){
 
 HEADERS += \
     bullet.h \
+    ninja.h \
     utils.h \
     zombie.h
