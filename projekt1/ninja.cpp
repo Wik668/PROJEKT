@@ -1,3 +1,4 @@
+//ninja to nowy przeciwnik na kolejne poziomy bedzie mial lepsze mozliwosci niz zombiak
 #include "ninja.h"
 #include <cmath>
 
