@@ -530,6 +530,7 @@
         void run() {
             menu.playSound();
             while (window.isOpen()) {
+
                 handleEvents();
                 update();
                 render();
@@ -555,8 +556,8 @@
         }
 
 
-
         void checkBulletCollisions() {
+            bool allZombiesKilled = true; // Flaga informująca, czy wszystkie zombie zostały zabite
             for (auto it = bullets.begin(); it != bullets.end();) {
                 bool bulletErased = false;
                 for (auto zombieIt = zombies.begin(); zombieIt != zombies.end(); ++zombieIt) {
@@ -568,11 +569,6 @@
                             zombieIt = zombies.erase(zombieIt);
                             zombiesKilled++;
                             updateKillCounterText();
-                            if (zombiesKilled % 5 == 0) {
-                                for (int i = 0; i < 5; ++i) {
-                                    createZombie(rand() % window_width, rand() % window_height);
-                                }
-                            }
                         } else {
                             ++zombieIt;
                         }
@@ -581,6 +577,22 @@
                 }
                 if (!bulletErased) {
                     ++it;
+                }
+            }
+
+            // Sprawdzamy, czy wszystkie zombie zostały zabite
+            for (auto zombieIt = zombies.begin(); zombieIt != zombies.end(); ++zombieIt) {
+                if (zombieIt->getHealth() > 0) {
+                    allZombiesKilled = false;
+                    break;
+                }
+            }
+
+            // Jeśli wszystkie zombie zostały zabite, tworzymy nowe
+            if (allZombiesKilled && zombies.empty()) {
+                int newZombieCount = zombiesKilled * 2;
+                for (int i = 0; i < newZombieCount; ++i) {
+                    createZombie(rand() % window_width, rand() % window_height);
                 }
             }
         }
