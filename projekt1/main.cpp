@@ -596,7 +596,7 @@
                 }
             }
         }
-
+//Koniec fragmentu respienia zombie przy zabijaniu
 
 
 
