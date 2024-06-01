@@ -417,67 +417,64 @@
                 createZombie(i * 100, 200);  // Example positions
             }
         }
+        void initializeZombies(float x, float y) {
+            for (int i = 0; i < 5; ++i) {
+                createZombie(i*x, i*y);  // Example positions
+            }
+        }
 
         void initializeNinjas()
         {
             for (int i = 0; i < 3; i++){
-               createNinja(i*200, 300); //czeka na funkcje
+               createNinja(i*150, 400); //czeka na funkcje
             }
         }
 
-        void createNinja(float x, float y)
-        {
+        void addNinjaAnimationFrames(Ninja& ninja, const Texture& texture) {
+            // Define animation frames as IntRect objects
+            std::vector<IntRect> frames = {
+                IntRect(6, 100, 17, 26),
+                IntRect(39, 100, 17, 26),
+                IntRect(71, 100, 17, 26),
+                IntRect(103, 100, 17, 26),
+                IntRect(134, 100, 17, 26),
+                IntRect(167, 100, 17, 26),
+                IntRect(199, 100, 17, 26),
+                IntRect(231, 100, 17, 26)
+            };
+
+            // Add each frame to the ninja animation
+            for (const auto& frame : frames) {
+                // Create a sprite from the texture using the defined frame
+                Sprite sprite;
+                sprite.setTexture(texture);
+                sprite.setTextureRect(frame);
+
+                // Add the sprite as an animation frame
+                ninja.add_animation_frame_right(sprite.getTextureRect());
+            }
+        }
+
+        void createNinja(float x, float y) {
             Ninja ninja(3);
             ninja.setTexture(ninja_texture);
 
-            ninja.add_animation_frame_right(IntRect(11, 69, 14, 26));
-            ninja.add_animation_frame_right(IntRect(42, 69, 14, 26));
-            ninja.add_standing_frame_right(IntRect(74, 69, 14, 26));
-            ninja.add_animation_frame_right(IntRect(107, 69, 14, 26));
-            ninja.add_animation_frame_right(IntRect(140, 69, 14, 26));
-            ninja.add_animation_frame_right(IntRect(173, 69, 14, 26));
-            ninja.add_animation_frame_right(IntRect(204, 69, 14, 26));
-            ninja.add_standing_frame_right(IntRect(236, 69, 14, 26));
-            ninja.add_animation_frame_right(IntRect(269, 69, 14, 26));
-            ninja.add_animation_frame_right(IntRect(300, 69, 14, 26));
+            // Add animation frames using the new function
+            addNinjaAnimationFrames(ninja, ninja_texture);
 
-            ninja.add_standing_frame_left(IntRect(9, 101, 12, 26));
-            ninja.add_animation_frame_left(IntRect(41, 101, 12, 26));
-            ninja.add_animation_frame_left(IntRect(72, 101, 12, 26));
-            ninja.add_standing_frame_left(IntRect(104, 101, 12, 26));
-            ninja.add_animation_frame_left(IntRect(136, 101, 12, 26));
-            ninja.add_animation_frame_left(IntRect(166, 101, 12, 26));
-            ninja.add_animation_frame_left(IntRect(199, 101, 12, 26));
-            ninja.add_standing_frame_left(IntRect(230, 101, 12, 26));
-            ninja.add_animation_frame_left(IntRect(262, 101, 12, 26));
-            ninja.add_animation_frame_left(IntRect(296, 101, 12, 26));
-
-            ninja.add_standing_frame_up(IntRect(10, 0, 12, 26));
-            ninja.add_animation_frame_up(IntRect(42, 0, 12, 26));
-            ninja.add_animation_frame_up(IntRect(74, 0, 12, 26));
-            ninja.add_standing_frame_up(IntRect(106, 0, 12, 26));
-            ninja.add_animation_frame_up(IntRect(137, 0, 12, 26));
-            ninja.add_animation_frame_up(IntRect(168, 0, 12, 26));
-            ninja.add_animation_frame_up(IntRect(200, 0, 12, 26));
-            ninja.add_standing_frame_up(IntRect(231, 0, 12, 26));
-            ninja.add_animation_frame_up(IntRect(264, 0, 12, 26));
-            ninja.add_animation_frame_up(IntRect(297, 0, 12, 26));
-
-            ninja.add_animation_frame_down(IntRect(10, 37, 12, 26));
-            ninja.add_animation_frame_down(IntRect(42, 37, 12, 26));
-            ninja.add_standing_frame_down(IntRect(74, 37, 12, 26));
-            ninja.add_animation_frame_down(IntRect(106, 37, 12, 26));
-            ninja.add_animation_frame_down(IntRect(137, 37, 12, 26));
-            ninja.add_animation_frame_down(IntRect(168, 37, 12, 26));
-            ninja.add_animation_frame_down(IntRect(200, 37, 12, 26));
-            ninja.add_standing_frame_down(IntRect(231, 37, 12, 26));
-            ninja.add_animation_frame_down(IntRect(264, 37, 12, 26));
-            ninja.add_animation_frame_down(IntRect(297, 37, 12, 26));
-
-            ninja.setScale(3, 3);
+            // Set position and scale
+            ninja.setScale(1, 1);
             ninja.setPosition(x, y);
+
+            // Initialize animation to ensure the correct frame is displayed from the start
+            ninja.step();
+
+            // Add the ninja to the list of ninjas
             ninjas.push_back(ninja);
         }
+
+
+
 
 
         void createZombie(float x, float y) {
@@ -538,10 +535,11 @@
     public:
         Game()
             : health(100), window(sf::VideoMode(window_width, window_height), "Game Window"),
-            hero(5), gameStarted(false), gameEnded(false), move_speed(0.1f), bullet_speed(0.5f), Ninja_killed(0) ,zombiesKilled(0) {
+            hero(5), gameStarted(false), gameEnded(false), move_speed(0.1f), bullet_speed(0.5f), zombiesKilled(0) ,Ninja_killed(0) {
             loadResources();
             initializeHero();
             initializeZombies();
+            initializeNinjas();
             background_sprite.setTexture(background_texture);
 
             if (!font.loadFromFile("arial.ttf")) {
@@ -596,6 +594,18 @@
                 }
             }
         }
+        void checkHeroNinjaCollisions() {
+            for (auto& ninja : ninjas) {
+                if (checkCollision(hero, ninja)) {
+                    health -= damage;
+                    updateHealthText();
+                    if (health <= 0) {
+                        gameEnded = true;
+                        gameMusic.stop();
+                    }
+                }
+            }
+        }
 
         void run() {
             menu.playSound();
@@ -627,12 +637,11 @@
 
 
         void checkBulletCollisions() {
-            bool allZombiesKilled = true; // Flaga informująca, czy wszystkie zombie zostały zabite
-            for (auto it = bullets.begin(); it != bullets.end();) {
+            for (auto bulletIt = bullets.begin(); bulletIt != bullets.end();) {
                 bool bulletErased = false;
-                for (auto zombieIt = zombies.begin(); zombieIt != zombies.end(); ++zombieIt) {
-                    if (checkCollision(*it, *zombieIt)) {
-                        it = bullets.erase(it);
+                for (auto zombieIt = zombies.begin(); zombieIt != zombies.end();) {
+                    if (checkCollision(*bulletIt, *zombieIt)) {
+                        bulletIt = bullets.erase(bulletIt);
                         zombieIt->takeDamage(50);
                         bulletErased = true;
                         if (zombieIt->getHealth() <= 0) {
@@ -643,29 +652,58 @@
                             ++zombieIt;
                         }
                         break;
+                    } else {
+                        ++zombieIt;
                     }
                 }
+
                 if (!bulletErased) {
-                    ++it;
+                    for (auto ninjaIt = ninjas.begin(); ninjaIt != ninjas.end();) {
+                        if (checkCollision(*bulletIt, *ninjaIt)) {
+                            bulletIt = bullets.erase(bulletIt);
+                            ninjaIt->takeDamage(25);
+                            bulletErased = true;
+                            if (ninjaIt->getHealth() <= 0) {
+                                ninjaIt = ninjas.erase(ninjaIt);
+                                Ninja_killed++;
+                                updateKillCounterText();
+                            } else {
+                                ++ninjaIt;
+                            }
+                            break;
+                        } else {
+                            ++ninjaIt;
+                        }
+                    }
+                }
+
+                if (!bulletErased) {
+                    ++bulletIt;
                 }
             }
 
-            // Sprawdzamy, czy wszystkie zombie zostały zabite
-            for (auto zombieIt = zombies.begin(); zombieIt != zombies.end(); ++zombieIt) {
-                if (zombieIt->getHealth() > 0) {
-                    allZombiesKilled = false;
-                    break;
-                }
-            }
+            bool allZombiesKilled = std::all_of(zombies.begin(), zombies.end(), [](const Zombie& z){ return z.getHealth() <= 0; });
+            bool allNinjasKilled = std::all_of(ninjas.begin(), ninjas.end(), [](const Ninja& n){ return n.getHealth() <= 0; });
 
-            // Jeśli wszystkie zombie zostały zabite, tworzymy nowe
-            if (allZombiesKilled && zombies.empty()) {
-                int newZombieCount = zombiesKilled * 2;
-                for (int i = 0; i < newZombieCount; ++i) {
-                    createZombie(rand() % window_width, rand() % window_height);
-                }
+            if (allZombiesKilled && zombies.empty() && allNinjasKilled && ninjas.empty()) {
+                int newZombieCount = zombiesKilled;
+                int newNinjaCount = Ninja_killed;
+
+
+                    createZombie(rand() % window_width, rand() % window_height*2);
+
+
+
+                    createNinja(rand() % window_width, rand() % window_height);
+
             }
         }
+
+
+
+
+
+
 //Koniec fragmentu respienia zombie przy zabijaniu
 
 
@@ -731,6 +769,7 @@
         void update() {
             if (gameStarted && !gameEnded) {
                 FloatRect bounds(0, 0, window_width, window_height);
+
                 if (Keyboard::isKeyPressed(Keyboard::A)) {
                     hero.moveWithCollision(bounds, -move_speed, 0);
                 } else if (Keyboard::isKeyPressed(Keyboard::D)) {
@@ -743,6 +782,7 @@
                 hero.step();
 
                 Vector2f playerPosition = hero.getPosition();
+
                 for (auto& zombie : zombies) {
                     Vector2f zombiePosition = zombie.getPosition();
                     Vector2f direction = playerPosition - zombiePosition;
@@ -754,15 +794,19 @@
                     zombie.step();
                 }
 
-                for (size_t i = 0; i < zombies.size(); ++i) {
-                    for (size_t j = i + 1; j < zombies.size(); ++j) {
-                        if (checkCollision(zombies[i], zombies[j])) {
-                            resolveCollision(zombies[i], zombies[j]);
-                        }
-                    }
+                for (auto& ninja : ninjas) {
+                    Vector2f ninjaPosition = ninja.getPosition();
+                    Vector2f direction = playerPosition - ninjaPosition;
+                    direction = normalize(direction);
+
+                    float moveX = direction.x * move_speed * 0.2;
+                    float moveY = direction.y * move_speed * 0.2;
+                    ninja.moveWithCollision(bounds, moveX, moveY);
+                    ninja.step();
                 }
 
                 checkHeroZombieCollisions();
+                checkHeroNinjaCollisions();
 
                 if (survivalMode) {
                     Time elapsed = survivalClock.getElapsedTime();
@@ -774,13 +818,15 @@
                 for (auto& bullet : bullets) {
                     bullet.update();
                 }
-                if (!gameStarted && !gameEnded) {
-                    sf::Vector2i mousePos = sf::Mouse::getPosition(window);
-                    menu.update(mousePos);
-                }
+
                 checkBulletCollisions();
+            } else if (!gameStarted && !gameEnded) {
+                sf::Vector2i mousePos = sf::Mouse::getPosition(window);
+                menu.update(mousePos);
             }
         }
+
+
 
 
         void render() {
@@ -792,29 +838,40 @@
                         window.draw(background_sprite);
                     }
                 }
+
                 window.draw(hero);
-                for (auto& zombie : zombies) {
+
+                for (const auto& zombie : zombies) {
                     window.draw(zombie);
                 }
+
+                for (const auto& ninja : ninjas) {
+                    window.draw(ninja);
+                }
+
+                for (const auto& bullet : bullets) {
+                    window.draw(bullet);
+                }
+
                 if (survivalMode) {
                     window.draw(timerText);
                 }
                 window.draw(healthText);
-                window.draw(killCounterText); // Draw the kill counter text
+                window.draw(killCounterText);
+
                 if (gameEnded) {
                     window.draw(endGameText);
-                }
-                for (const auto& bullet : bullets) {
-                    window.draw(bullet);
                 }
             } else {
                 menu.draw(window);
             }
             window.display();
         }
+
+
         void updateKillCounterText() {
             std::stringstream ss;
-            ss << "Kills: " << zombiesKilled;
+            ss << "Kills: " << zombiesKilled + Ninja_killed;
             killCounterText.setString(ss.str());
         }
 
