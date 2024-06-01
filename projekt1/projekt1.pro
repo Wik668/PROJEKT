@@ -5,6 +5,9 @@ CONFIG -= qt
 CONFIG += gui
 
 SOURCES += \
+        AnimatedSprite.cpp \
+        Button.cpp \
+        Menu.cpp \
         bullet.cpp \
         main.cpp \
         ninja.cpp \
@@ -18,6 +21,9 @@ CONFIG(debug, debug|release){
 }
 
 HEADERS += \
+    AnimatedSprite.h \
+    Button.h \
+    Menu.h \
     bullet.h \
     ninja.h \
     utils.h \

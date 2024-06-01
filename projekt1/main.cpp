@@ -1,304 +1,28 @@
-    #include <SFML/Window.hpp>
-    #include <SFML/Graphics.hpp>
-    #include <iostream>
-    #include <vector>
-    #include <SFML/Audio.hpp>
-    #include <SFML/Audio/SoundBuffer.hpp>
-    #include <sstream>
-    #include <iomanip>
-    #include <SFML/System/Vector2.hpp> // Include the necessary header
-    #include "Zombie.h" // Include the Zombie header
-    #include "Bullet.h"
-    #include"ninja.h"//ninja nowy przeciwnik
-    #include "utils.h"
-    using namespace std;
-    using namespace sf;
-
-
-
-
-
-    class AnimatedSprite : public Sprite {
-    private:
-        vector<IntRect> framesRight;
-        vector<IntRect> framesLeft;
-        vector<IntRect> framesUp;
-        vector<IntRect> framesDown;
-        int currentFrame;
-        int animationFps;
-        Time frameTime;
-        Clock clock;
-        enum Direction { Up, Down, Left, Right } direction;
-
-    public:
-        AnimatedSprite(int fps) : currentFrame(0), animationFps(fps), direction(Right) {}
-
-        void add_animation_frame_right(const IntRect& frame) {
-            framesRight.push_back(frame);
-        }
-
-        void add_animation_frame_left(const IntRect& frame) {
-            framesLeft.push_back(frame);
-        }
-
-        void add_animation_frame_up(const IntRect& frame) {
-            framesUp.push_back(frame);
-        }
-
-        void add_animation_frame_down(const IntRect& frame) {
-            framesDown.push_back(frame);
-        }
-
-        void add_standing_frame_right(const IntRect& frame) {
-            framesRight.push_back(frame);
-        }
-
-        void add_standing_frame_left(const IntRect& frame) {
-            framesLeft.push_back(frame);
-        }
-
-        void add_standing_frame_up(const IntRect& frame) {
-            framesUp.push_back(frame);
-        }
-
-        void add_standing_frame_down(const IntRect& frame) {
-            framesDown.push_back(frame);
-        }
-//naprawione warunki animacji od kiedy przeszliśmy na WSAD wcześniej były strzałki
-        void step() {
-            if (sf::Keyboard::isKeyPressed(sf::Keyboard::A) ||
-                sf::Keyboard::isKeyPressed(sf::Keyboard::D) ||
-                sf::Keyboard::isKeyPressed(sf::Keyboard::W) ||
-                sf::Keyboard::isKeyPressed(sf::Keyboard::S)) {
-                frameTime += clock.restart();
-                Time timePerFrame = seconds(1.0f / animationFps);
-
-                while (frameTime >= timePerFrame) {
-                    frameTime -= timePerFrame;
-                    currentFrame = (currentFrame + 1) % (getFrames().size() - 1); // Skip standing frame
-                    setTextureRect(getFrames()[currentFrame]);
-                }
-            } else {
-                setTextureRect(getFrames().back()); // Set the last frame as standing frame
-            }
-        }
-
-        void moveWithCollision(const FloatRect& bounds, float offsetX, float offsetY) {
-            Vector2f oldPosition = getPosition();
-            Sprite::move(offsetX, offsetY);
-            FloatRect spriteBounds = getGlobalBounds();
-
-            if (spriteBounds.left < bounds.left ||
-                spriteBounds.top < bounds.top ||
-                spriteBounds.left + spriteBounds.width > bounds.left + bounds.width ||
-                spriteBounds.top + spriteBounds.height > bounds.top + bounds.height) {
-                setPosition(oldPosition);
-            } else {
-                if (offsetX > 0) direction = Right;
-                else if (offsetX < 0) direction = Left;
-                else if (offsetY > 0) direction = Down;
-                else if (offsetY < 0) direction = Up;
-            }
-        }
-
-    private:
-        const vector<IntRect>& getFrames() const {
-            switch (direction) {
-            case Right: return framesRight;
-            case Left: return framesLeft;
-            case Up: return framesUp;
-            case Down: return framesDown;
-            }
-            // To avoid warning, returning framesRight as a default case.
-            return framesRight;
-        }
-    };
-    class Button {
-    private:
-        sf::RectangleShape shape;
-        sf::Text text;
-        bool isSelected;
-
-    public:
-        Button(const sf::Vector2f& size, const sf::Font& font, const std::string& textString, const sf::Vector2f& position)
-            : isSelected(false) {
-            shape.setSize(size);
-            shape.setFillColor(sf::Color::White);
-            shape.setPosition(position);
-
-            text.setFont(font);
-            text.setString(textString);
-            text.setCharacterSize(24);
-            text.setFillColor(sf::Color::Black);
-            text.setPosition(
-                position.x + (size.x - text.getGlobalBounds().width) / 2,
-                position.y + (size.y - text.getGlobalBounds().height) / 2
-                );
-        }
-
-        void draw(sf::RenderWindow& window) {
-            window.draw(shape);
-            window.draw(text);
-        }
-
-        void setSelected(bool selected) {
-            isSelected = selected;
-            shape.setFillColor(selected ? sf::Color::Red : sf::Color::White);
-            text.setFillColor(selected ? sf::Color::White : sf::Color::Black);
-        }
-
-        bool contains(const sf::Vector2f& point) const {
-            return shape.getGlobalBounds().contains(point);
-        }
-
-        bool isSelectedButton() const {
-            return isSelected;
-        }
-
-        std::string getText() const {
-            return text.getString();
-        }
-    };
-
-    class Menu {
-    private:
-        sf::Font font;
-        sf::Text text;
-        sf::Texture background_texture;
-        sf::Sprite background_sprite;
-        sf::SoundBuffer buffer;
-        sf::Sound sound;
-        sf::Text survivalText;
-        sf::Text stageText;
-        bool selectedSurvival;
-
-    public:
-        sf::RectangleShape survivalButton;
-        sf::RectangleShape stageButton;
-
-    public:
-        Menu() : selectedSurvival(true) {
-            if (!font.loadFromFile("arial.ttf")) {
-                std::cout << "Nie udało się wczytać czcionki" << std::endl;
-            }
-
-            if (!background_texture.loadFromFile("menu.png")) {
-                std::cout << "Nie udało się wczytać tekstury tła menu" << std::endl;
-            }
-
-            if (!buffer.loadFromFile("menu_music.wav")) {
-                std::cout << "Nie udało się wczytać dźwięku menu" << std::endl;
-            }
-
-            sound.setBuffer(buffer);
-            sound.setLoop(true);
-
-            background_sprite.setTexture(background_texture);
-
-            text.setFont(font);
-            text.setString("Press ENTER to start game");
-            text.setCharacterSize(24);
-            text.setFillColor(sf::Color::White);
-            text.setPosition(250, 300);
-
-            survivalText.setFont(font);
-            survivalText.setString("Survival Mode");
-            survivalText.setCharacterSize(24);
-            survivalText.setFillColor(sf::Color::White);
-            survivalText.setPosition(250, 350);
-
-            stageText.setFont(font);
-            stageText.setString("Stage Mode");
-            stageText.setCharacterSize(24);
-            stageText.setFillColor(sf::Color::White);
-            stageText.setPosition(250, 400);
-
-            survivalButton.setSize(sf::Vector2f(200, 50));
-            survivalButton.setPosition(240, 345);
-            survivalButton.setFillColor(sf::Color::Transparent);
-            survivalButton.setOutlineThickness(2);
-            survivalButton.setOutlineColor(sf::Color::White);
-
-            stageButton.setSize(sf::Vector2f(200, 50));
-            stageButton.setPosition(240, 395);
-            stageButton.setFillColor(sf::Color::Transparent);
-            stageButton.setOutlineThickness(2);
-            stageButton.setOutlineColor(sf::Color::White);
-
-            updateSelection();
-        }
-
-        void playSound() {
-            sound.play();
-        }
-
-        void stopSound() {
-            sound.stop();
-        }
-
-        void draw(sf::RenderWindow& window) {
-            window.draw(background_sprite);
-            window.draw(text);
-            window.draw(survivalText);
-            window.draw(stageText);
-            window.draw(survivalButton);
-            window.draw(stageButton);
-        }
-
-        void moveSelectionUp() {
-            selectedSurvival = true;
-            updateSelection();
-        }
-
-        void moveSelectionDown() {
-            selectedSurvival = false;
-            updateSelection();
-        }
-
-        bool isSurvivalSelected() const {
-            return selectedSurvival;
-        }
-
-        bool isMouseOverButton(const sf::RectangleShape& button, const sf::Vector2i& mousePosition) const {
-            return button.getGlobalBounds().contains(sf::Vector2f(mousePosition));
-        }
-
-        void update(const sf::Vector2i& mousePosition) {
-            if (isMouseOverButton(survivalButton, mousePosition)) {
-                survivalText.setFillColor(sf::Color::Red);
-            } else {
-                survivalText.setFillColor(sf::Color::White);
-            }
-
-            if (isMouseOverButton(stageButton, mousePosition)) {
-                stageText.setFillColor(sf::Color::Red);
-            } else {
-                stageText.setFillColor(sf::Color::White);
-            }
-        }
-
-    private:
-        void updateSelection() {
-            if (selectedSurvival) {
-                survivalText.setFillColor(sf::Color::Red);
-                stageText.setFillColor(sf::Color::White);
-            } else {
-                survivalText.setFillColor(sf::Color::White);
-                stageText.setFillColor(sf::Color::Red);
-            }
-        }
-    };
-
+#include <SFML/Window.hpp>
+#include <SFML/Graphics.hpp>
+#include <iostream>
+#include <vector>
+#include <SFML/Audio.hpp>
+#include <SFML/Audio/SoundBuffer.hpp>
+#include <sstream>
+#include <iomanip>
+#include <SFML/System/Vector2.hpp>
+#include "AnimatedSprite.h"
+#include "Zombie.h"
+#include "Bullet.h"
+#include "ninja.h"
+#include "utils.h"
+#include "Menu.h"
+using namespace std;
+using namespace sf;
 
     class Game {
-        // Other class members
         vector<Zombie> zombies;
         sf::Texture zombie_texture;
         vector<Ninja> ninjas;
         sf::Texture ninja_texture;
-
     private:
-        float health;  // Add this line for the health attribute
+        float health;
         sf::Text healthText;
         int window_width = 800;
         int window_height = 600;
@@ -307,34 +31,29 @@
         sf::Texture character_texture;
         sf::Texture background_texture;
         sf::Sprite background_sprite;
-        sf::Music gameMusic;//dodane do muzyki
+        sf::Music gameMusic;
         sf::SoundBuffer buffer;
         sf::Sound sound;
         Menu menu;
         bool gameStarted;
         bool survivalMode;
-        bool gameEnded;    // New variable to store the selected game mode
+        bool gameEnded;
         float move_speed;
-        sf::Clock survivalClock; // Clock for the Survival Mode timer
+        sf::Clock survivalClock;
         sf::Text timerText;
         sf::Font font;
         sf::Texture bullet_texture;
         std::vector<Bullet> bullets;
         float bullet_speed;
-        sf::Text killCounterText; // Add this line
+        sf::Text killCounterText;
         int zombiesKilled;
         int Ninja_killed;
         sf::Texture survivalButtonTexture;
-        sf::Texture survivalButtonTextureRed; // For highlighted version
+        sf::Texture survivalButtonTextureRed;
         sf::Texture stageButtonTexture;
         sf::Texture stageButtonTextureRed;
-        // Other class members
-
-
-
-
-        sf::Text endGameText; // Text for the end game message
-
+        sf::Text endGameText;
+        float damage = 0.01;
 
         void loadResources() {
             if (!ninja_texture.loadFromFile("enemy2.png")){
@@ -360,20 +79,14 @@
                 std::cout << "Nie udało się wczytać tekstury pocisku" << std::endl;
                 exit(1);
             }
-
-
             sound.setBuffer(buffer);
-            sound.setLoop(true); // Set the sound to loop
-            // Dodaj ten kod //dodany do muzyki
-            if (!gameMusic.openFromFile("blanka.wav")) { // Zmień ścieżkę na rzeczywistą ścieżkę do pliku muzycznego
+            sound.setLoop(true);
+            if (!gameMusic.openFromFile("blanka.wav")) {
                 std::cout << "Nie udało się wczytać muzyki" << std::endl;
                 exit(1);
             }
-
-            // No need to scale the background sprite anymore
             background_sprite.setTexture(background_texture);
         }
-
 
         void playSound() {
             sound.play();
@@ -409,17 +122,12 @@
             hero.add_standing_frame_down(IntRect(134, 6, 14, 25));
 
             hero.setScale(2,2);
-            hero.setPosition(0, 0);
+            hero.setPosition(250, 250);
 
         }
         void initializeZombies() {
             for (int i = 0; i < 5; ++i) {
-                createZombie(i * 100, 200);  // Example positions
-            }
-        }
-        void initializeZombies(float x, float y) {
-            for (int i = 0; i < 5; ++i) {
-                createZombie(i*x, i*y);  // Example positions
+                createZombie(i * 100, 200);
             }
         }
 
@@ -430,8 +138,7 @@
             }
         }
 
-        void addNinjaAnimationFrames(Ninja& ninja, const Texture& texture) {
-            // Define animation frames as IntRect objects
+        void addNinjaAnimationFrames(Ninja& ninja) {
             std::vector<IntRect> frames = {
                 IntRect(6, 100, 17, 26),
                 IntRect(39, 100, 17, 26),
@@ -443,94 +150,53 @@
                 IntRect(231, 100, 17, 26)
             };
 
-            // Add each frame to the ninja animation
             for (const auto& frame : frames) {
-                // Create a sprite from the texture using the defined frame
-                Sprite sprite;
-                sprite.setTexture(texture);
-                sprite.setTextureRect(frame);
-
-                // Add the sprite as an animation frame
-                ninja.add_animation_frame_right(sprite.getTextureRect());
+                ninja.add_animation_frame_right(frame);
             }
         }
 
         void createNinja(float x, float y) {
             Ninja ninja(3);
             ninja.setTexture(ninja_texture);
-
-            // Add animation frames using the new function
-            addNinjaAnimationFrames(ninja, ninja_texture);
-
-            // Set position and scale
+            addNinjaAnimationFrames(ninja);
+            ninja.setTextureRect(IntRect(6, 100, 17, 26)); // Set initial frame
             ninja.setScale(1, 1);
             ninja.setPosition(x, y);
-
-            // Initialize animation to ensure the correct frame is displayed from the start
             ninja.step();
-
-            // Add the ninja to the list of ninjas
             ninjas.push_back(ninja);
         }
-
-
-
-
 
         void createZombie(float x, float y) {
             Zombie zombie(5);
             zombie.setTexture(zombie_texture);
-
-            zombie.add_animation_frame_right(IntRect(11, 69, 14, 26));
-            zombie.add_animation_frame_right(IntRect(42, 69, 14, 26));
-            zombie.add_standing_frame_right(IntRect(74, 69, 14, 26));
-            zombie.add_animation_frame_right(IntRect(107, 69, 14, 26));
-            zombie.add_animation_frame_right(IntRect(140, 69, 14, 26));
-            zombie.add_animation_frame_right(IntRect(173, 69, 14, 26));
-            zombie.add_animation_frame_right(IntRect(204, 69, 14, 26));
-            zombie.add_standing_frame_right(IntRect(236, 69, 14, 26));
-            zombie.add_animation_frame_right(IntRect(269, 69, 14, 26));
-            zombie.add_animation_frame_right(IntRect(300, 69, 14, 26));
-
-            zombie.add_standing_frame_left(IntRect(9, 101, 12, 26));
-            zombie.add_animation_frame_left(IntRect(41, 101, 12, 26));
-            zombie.add_animation_frame_left(IntRect(72, 101, 12, 26));
-            zombie.add_standing_frame_left(IntRect(104, 101, 12, 26));
-            zombie.add_animation_frame_left(IntRect(136, 101, 12, 26));
-            zombie.add_animation_frame_left(IntRect(166, 101, 12, 26));
-            zombie.add_animation_frame_left(IntRect(199, 101, 12, 26));
-            zombie.add_standing_frame_left(IntRect(230, 101, 12, 26));
-            zombie.add_animation_frame_left(IntRect(262, 101, 12, 26));
-            zombie.add_animation_frame_left(IntRect(296, 101, 12, 26));
-
-            zombie.add_standing_frame_up(IntRect(10, 0, 12, 26));
-            zombie.add_animation_frame_up(IntRect(42, 0, 12, 26));
-            zombie.add_animation_frame_up(IntRect(74, 0, 12, 26));
-            zombie.add_standing_frame_up(IntRect(106, 0, 12, 26));
-            zombie.add_animation_frame_up(IntRect(137, 0, 12, 26));
-            zombie.add_animation_frame_up(IntRect(168, 0, 12, 26));
-            zombie.add_animation_frame_up(IntRect(200, 0, 12, 26));
-            zombie.add_standing_frame_up(IntRect(231, 0, 12, 26));
-            zombie.add_animation_frame_up(IntRect(264, 0, 12, 26));
-            zombie.add_animation_frame_up(IntRect(297, 0, 12, 26));
-
-            zombie.add_animation_frame_down(IntRect(10, 37, 12, 26));
-            zombie.add_animation_frame_down(IntRect(42, 37, 12, 26));
-            zombie.add_standing_frame_down(IntRect(74, 37, 12, 26));
-            zombie.add_animation_frame_down(IntRect(106, 37, 12, 26));
-            zombie.add_animation_frame_down(IntRect(137, 37, 12, 26));
-            zombie.add_animation_frame_down(IntRect(168, 37, 12, 26));
-            zombie.add_animation_frame_down(IntRect(200, 37, 12, 26));
-            zombie.add_standing_frame_down(IntRect(231, 37, 12, 26));
-            zombie.add_animation_frame_down(IntRect(264, 37, 12, 26));
-            zombie.add_animation_frame_down(IntRect(297, 37, 12, 26));
-
-            zombie.setScale(2, 2);
+            addZombieAnimationFrames(zombie);
+            zombie.setTextureRect(IntRect(11, 69, 14, 26)); // Set initial frame
+            zombie.setScale(1, 1);
             zombie.setPosition(x, y);
+            zombie.step();
             zombies.push_back(zombie);
         }
 
-//Tu koniec na godzine 19:00 z dodawaniem ninja
+        void addZombieAnimationFrames(Zombie& zombie) {
+            std::vector<IntRect> frames = {
+                IntRect(11, 69, 14, 26),
+                IntRect(42, 69, 14, 26),
+                IntRect(74, 69, 14, 26),
+                IntRect(107, 69, 14, 26),
+                IntRect(140, 69, 14, 26),
+                IntRect(173, 69, 14, 26),
+                IntRect(204, 69, 14, 26),
+                IntRect(231, 100, 17, 26),
+                IntRect(269, 69, 14, 26),
+                IntRect(300, 69, 14, 26)
+            };
+
+            for (const auto& frame : frames) {
+                zombie.add_animation_frame_right(frame);
+            }
+        }
+
+
 
     public:
         Game()
@@ -568,10 +234,7 @@
             killCounterText.setFillColor(sf::Color::White);
             killCounterText.setPosition(window_width - 150, 10);
             updateKillCounterText();
-
-
         }
-
 
         void updateHealthText() {
             std::stringstream ss;
@@ -579,8 +242,6 @@
             healthText.setString("HP: " + ss.str());
         }
 
-
-        float damage = 0.01;
 
         void checkHeroZombieCollisions() {
             for (auto& zombie : zombies) {
@@ -623,18 +284,12 @@
             sf::Vector2f heroCenter = hero.getPosition() + sf::Vector2f(hero.getGlobalBounds().width / 2, hero.getGlobalBounds().height / 2);
             sf::Vector2i mousePosition = sf::Mouse::getPosition(window);
             sf::Vector2f target = window.mapPixelToCoords(mousePosition);
-
             sf::Vector2f direction = normalize(target - heroCenter);
-
-            // Obliczanie kąta w stopniach
             float angle = std::atan2(direction.y, direction.x) * 180 / 3.14159265;
-
             Bullet bullet(bullet_texture, direction, bullet_speed, angle);
             bullet.setPosition(heroCenter);
-
             bullets.push_back(bullet);
         }
-
 
         void checkBulletCollisions() {
             for (auto bulletIt = bullets.begin(); bulletIt != bullets.end();) {
@@ -684,29 +339,11 @@
 
             bool allZombiesKilled = std::all_of(zombies.begin(), zombies.end(), [](const Zombie& z){ return z.getHealth() <= 0; });
             bool allNinjasKilled = std::all_of(ninjas.begin(), ninjas.end(), [](const Ninja& n){ return n.getHealth() <= 0; });
-
             if (allZombiesKilled && zombies.empty() && allNinjasKilled && ninjas.empty()) {
-                int newZombieCount = zombiesKilled;
-                int newNinjaCount = Ninja_killed;
-
-
                     createZombie(rand() % window_width, rand() % window_height*2);
-
-
-
                     createNinja(rand() % window_width, rand() % window_height);
-
             }
         }
-
-
-
-
-
-
-//Koniec fragmentu respienia zombie przy zabijaniu
-
-
 
         void handleEvents() {
             sf::Event event;
@@ -761,10 +398,6 @@
                 menu.stageButton.setTexture(&stageButtonTexture); // Default version
             }
         }
-
-
-
-
 
         void update() {
             if (gameStarted && !gameEnded) {
@@ -826,9 +459,6 @@
             }
         }
 
-
-
-
         void render() {
             window.clear();
             if (gameStarted) {
@@ -838,7 +468,6 @@
                         window.draw(background_sprite);
                     }
                 }
-
                 window.draw(hero);
 
                 for (const auto& zombie : zombies) {
@@ -868,14 +497,11 @@
             window.display();
         }
 
-
         void updateKillCounterText() {
             std::stringstream ss;
             ss << "Kills: " << zombiesKilled + Ninja_killed;
             killCounterText.setString(ss.str());
         }
-
-
 
         bool checkCollision(const sf::Sprite& sprite1, const sf::Sprite& sprite2) {
             return sprite1.getGlobalBounds().intersects(sprite2.getGlobalBounds());
@@ -906,7 +532,6 @@
         }
 
     };
-    //do testu commita
     int main() {
         Game game;
         game.run();
