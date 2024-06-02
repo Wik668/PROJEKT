@@ -451,10 +451,10 @@ public:
 
         loadResources();
         initializeHero();
-        // createZombie();
-        // createNinja();
-        // createSlime();
-        createBoss();
+        createZombie();
+        createNinja();
+        createSlime();
+        //createBoss();
 
         initializeMedkits();
         background_sprite.setTexture(background_texture);
