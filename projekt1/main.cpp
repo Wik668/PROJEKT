@@ -89,6 +89,8 @@ private:
     Button exitButton;
     bool timeRecorded;
     float survivalTime;
+    int roundCounter; // moved from static inside checkBulletCollisions
+    int licz;
 
 
 
@@ -447,14 +449,16 @@ public:
         playAgainButton(sf::Vector2f(200, 50), font, "Play again", sf::Vector2f(300, 400)), // Initialize endGameMenu
         exitButton(sf::Vector2f(200, 50), font, "Exit", sf::Vector2f(300, 500)),
         timeRecorded(false),
-        survivalTime(0.0f) {
+        survivalTime(0.0f),
+        roundCounter(0), // Initialize counters
+        licz(0)    {
 
         loadResources();
         initializeHero();
         createZombie();
         createNinja();
         createSlime();
-        //createBoss();//poprawka
+
 
         initializeMedkits();
         background_sprite.setTexture(background_texture);
@@ -608,6 +612,10 @@ public:
         survivalClock.restart();
         MedkitClock.restart();
 
+        // Reset round counter
+        roundCounter = 0;
+        licz = 0;
+
         // Add initial entities again if needed
         createZombie();
         createNinja();
@@ -742,16 +750,15 @@ public:
         bool allSlimesKilled = std::all_of(slimes.begin(), slimes.end(), [](const Slime& n){ return n.getHealth() <= 0.0; });
         bool allBossesKilled = std::all_of(bosses.begin(), bosses.end(), [](const Boss& n){ return n.getHealth() <= 0.0; });
         if (allZombiesKilled && zombies.empty()&& allBossesKilled && bosses.empty()&& allSlimesKilled && slimes.empty() && allNinjasKilled && ninjas.empty()) {
-            static int roundCounter = 0;
-            static int licz=0;
             roundCounter++;
             spawnMedkit();
-            if (roundCounter % 3 != 0){
+            if (roundCounter % 3 != 0) {
                 for (int i = 0; i <= roundCounter; i++) {
                     createZombie();
                     createNinja();
                     createSlime();
-                }}
+                }
+            }
 
             if (roundCounter % 3 == 0) {
                 createBoss();
