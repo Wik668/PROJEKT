@@ -1,51 +1,31 @@
 #ifndef BOSS_H
 #define BOSS_H
 
-#include "SlimeProjectile.h"
 #include <SFML/Graphics.hpp>
 #include <vector>
+#include "SlimeProjectile.h"
+#include "Fireball.h"
 
 class Boss : public sf::Sprite {
 public:
-    enum Direction { Right, Left, Up, Down };
-
-    Boss(int fps);
-
-    void moveWithCollision(const sf::FloatRect& bounds, float offsetX, float offsetY);
-
-    void add_animation_frame_right(const sf::IntRect& frame);
-    void add_animation_frame_left(const sf::IntRect& frame);
-    void add_animation_frame_up(const sf::IntRect& frame);
-    void add_animation_frame_down(const sf::IntRect& frame);
-
-    void step();
-
-    int getHealth() const;
-    void setHealth(int hp);
-    void takeDamage(int damage);
-    void heal(int amount);
-
-    Boss clone() const;
+    Boss(float speed);
 
     void shoot(std::vector<SlimeProjectile>& slimeProjectiles, const sf::Texture& projectileTexture, sf::Vector2f target);
+    void shoot(std::vector<Fireball>& fireballs, const sf::Texture& fireballTexture, sf::Vector2f target);
+    void step();
+    void takeDamage(int damage);
+    float getHealth() const;
+    void add_animation_frame_right(const sf::IntRect& frame);
+    void moveWithCollision(const sf::FloatRect& bounds, float dx, float dy);
 
 private:
+    float speed;
+    float health;
+    std::size_t current_frame;
+    float animation_delay;
+    sf::Clock animationClock;
     sf::Clock shootClock;
-
-    std::vector<sf::IntRect> framesRight;
-    std::vector<sf::IntRect> framesLeft;
-    std::vector<sf::IntRect> framesUp;
-    std::vector<sf::IntRect> framesDown;
-
-    const std::vector<sf::IntRect>& getFrames() const;
-
-    int currentFrame;
-    int animationFps;
-    int health;
-    int speed;
-    Direction direction;
-    sf::Clock clock;
-    sf::Time frameTime;
+    std::vector<sf::IntRect> animation_frames_right;
 };
 
 #endif // BOSS_H

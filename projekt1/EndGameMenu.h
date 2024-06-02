@@ -9,6 +9,8 @@ class EndGameMenu {
 private:
     sf::Font font;
     sf::Text gameOverText;
+    sf::Text survivalTimeText;
+    sf::Text killCountText;
     sf::Texture background_texture;
     sf::Sprite background_sprite;
     sf::SoundBuffer buffer;
@@ -34,6 +36,7 @@ public:
     bool isBackToMenuSelected() const;
     bool isMouseOverButton(const sf::RectangleShape& button, const sf::Vector2i& mousePosition) const;
     void update(const sf::Vector2i& mousePosition);
+    void updateStats(float survivalTime, int killCount);
 };
 
 #endif // ENDGAMEMENU_H

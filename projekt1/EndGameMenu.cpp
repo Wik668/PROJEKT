@@ -1,4 +1,5 @@
 #include "EndGameMenu.h"
+#include <iomanip>
 
 EndGameMenu::EndGameMenu() : selectedBackToMenu(true) {
     if (!font.loadFromFile("arial.ttf")) {
@@ -60,6 +61,16 @@ EndGameMenu::EndGameMenu() : selectedBackToMenu(true) {
     exitButton.setOutlineThickness(2);
     exitButton.setOutlineColor(sf::Color::White);
 
+    survivalTimeText.setFont(font);
+    survivalTimeText.setCharacterSize(24);
+    survivalTimeText.setFillColor(sf::Color::White);
+    survivalTimeText.setPosition(500, 200); // Adjust position as needed
+
+    killCountText.setFont(font);
+    killCountText.setCharacterSize(24);
+    killCountText.setFillColor(sf::Color::White);
+    killCountText.setPosition(500, 250); // Adjust position as needed
+
     updateSelection();
 }
 
@@ -80,6 +91,8 @@ void EndGameMenu::draw(sf::RenderWindow& window) {
     window.draw(backToMenuButton);
     window.draw(playAgainButton);
     window.draw(exitButton);
+    window.draw(survivalTimeText);
+    window.draw(killCountText);
 }
 
 void EndGameMenu::moveSelectionUp() {
@@ -130,4 +143,14 @@ void EndGameMenu::updateSelection() {
         playAgainText.setFillColor(sf::Color::Red);
         exitText.setFillColor(sf::Color::White);
     }
+}
+
+void EndGameMenu::updateStats(float survivalTime, int killCount) {
+    std::stringstream ss;
+    ss << "Survival Time: " << std::fixed << std::setprecision(1) << survivalTime << " seconds";
+    survivalTimeText.setString(ss.str());
+
+    ss.str("");
+    ss << "Kills: " << killCount;
+    killCountText.setString(ss.str());
 }

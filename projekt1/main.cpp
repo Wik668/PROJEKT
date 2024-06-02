@@ -11,6 +11,7 @@
 #include "AnimatedSprite.h"
 #include "Boss.h"
 #include "Button.h"
+#include "Fireball.h"
 #include "Zombie.h"
 #include "Slime.h"
 #include "Bullet.h"
@@ -69,6 +70,8 @@ private:
     sf::Text endGameText;
     float damage = 0.01;
     std::vector<SlimeProjectile> slimeProjectiles;
+    std::vector<Fireball> Fireball;
+    sf::Texture fireballtexture;
     sf::Texture slimeProjectileTexture;
     sf::Texture medkit_texture;
     std::vector<Medkit> medkits;
@@ -84,6 +87,8 @@ private:
     Button backButton;
     Button playAgainButton;
     Button exitButton;
+    bool timeRecorded;
+    float survivalTime;
 
 
 
@@ -149,6 +154,10 @@ private:
         }
         if (!slimeProjectileTexture.loadFromFile("Slimeball.png")) {
             std::cout << "Nie udało się wczytać tekstury pocisku slime" << std::endl;
+            exit(1);
+        }
+        if (!fireballtexture.loadFromFile("fireball.png")) {
+            std::cout << "Nie udało się wczytać tekstury pocisku fireball" << std::endl;
             exit(1);
         }
 
@@ -313,26 +322,26 @@ private:
         }
     }
     void addBossAnimationFrames(Boss& boss) {
-        std::vector<IntRect> frames = {
-            IntRect(108, 219, 64, 100),
-            IntRect(397, 221, 64, 100),
-            IntRect(685, 219, 64, 100),
-            IntRect(973, 220, 64, 100),
-            IntRect(1260, 220, 64, 100),
-            IntRect(1549, 220, 64, 100),
-            IntRect(1834, 220, 64, 100),
-            IntRect(2122, 220, 64, 100),
-            IntRect(2410, 220, 64, 100),
-            IntRect(2700, 220, 64, 100),
-            IntRect(2989, 220, 64, 100),
-            IntRect(3276, 220, 64, 100)
-
+        std::vector<sf::IntRect> frames = {
+            sf::IntRect(108, 219, 64, 100),
+            sf::IntRect(397, 221, 64, 100),
+            sf::IntRect(685, 219, 64, 100),
+            sf::IntRect(973, 220, 64, 100),
+            sf::IntRect(1260, 220, 64, 100),
+            sf::IntRect(1549, 220, 64, 100),
+            sf::IntRect(1834, 220, 64, 100),
+            sf::IntRect(2122, 220, 64, 100),
+            sf::IntRect(2410, 220, 64, 100),
+            sf::IntRect(2700, 220, 64, 100),
+            sf::IntRect(2989, 220, 64, 100),
+            sf::IntRect(3276, 220, 64, 100)
         };
 
         for (const auto& frame : frames) {
             boss.add_animation_frame_right(frame);
         }
     }
+
     void createBoss() {
         const int margin = 50;
         int maxX = window.getSize().x - margin;
@@ -433,17 +442,19 @@ public:
         : health(100), window(sf::VideoMode(window_width, window_height), "Game Window"), hero(5),
         endGameMenu(),
         gameStarted(false),
-        gameEnded(false), move_speed(0.1f), bullet_speed(0.5f), zombiesKilled(0), Ninja_killed(0),
-        Slime_killed(0), // Initialize endGameMenu
-        backButton(sf::Vector2f(200, 50), font, "Back to menu", sf::Vector2f(300, 300)),
-        playAgainButton(sf::Vector2f(200, 50), font, "Play again", sf::Vector2f(300, 400)),
-        exitButton(sf::Vector2f(200, 50), font, "Exit", sf::Vector2f(300, 500)) {
+        gameEnded(false), move_speed(0.1f), bullet_speed(0.5f), // Inicjalizacja zmiennych
+        zombiesKilled(0), Ninja_killed(0), Slime_killed(0), backButton(sf::Vector2f(200, 50), font, "Back to menu", sf::Vector2f(300, 300)),
+        playAgainButton(sf::Vector2f(200, 50), font, "Play again", sf::Vector2f(300, 400)), // Initialize endGameMenu
+        exitButton(sf::Vector2f(200, 50), font, "Exit", sf::Vector2f(300, 500)),
+        timeRecorded(false),
+        survivalTime(0.0f) {
 
         loadResources();
         initializeHero();
-        createZombie();
-        createNinja();
-        createSlime();
+        // createZombie();
+        // createNinja();
+        // createSlime();
+        createBoss();
 
         initializeMedkits();
         background_sprite.setTexture(background_texture);
@@ -481,8 +492,6 @@ public:
         ammoText.setFillColor(sf::Color::White);
         ammoText.setPosition(10, window_height - 60);
         updateAmmoText();
-
-
     }
 
     void updateHealthText() {
@@ -591,6 +600,11 @@ public:
         Slime_killed = 0;
         updateKillCounterText();
         updateAmmoText();
+
+        // Reset flags
+        gameEnded = false;
+        timeRecorded = false;
+        survivalTime = 0.0f;
         survivalClock.restart();
         MedkitClock.restart();
 
@@ -618,17 +632,22 @@ public:
     }
 
 
-    void updateAmmoText() {
-        std::stringstream ss;
-        ss << "Ammo: " << ammo;
-        ammoText.setString(ss.str());
-    }
     void reload() {
-        if (!reloading) {
+        if (!reloading && !unlimitedAmmo) {
             reloading = true;
             reloadClock.restart();
             ammoText.setString("Reloading...");
         }
+    }
+
+    void updateAmmoText() {
+        std::stringstream ss;
+        if (unlimitedAmmo) {
+            ss << "Ammo: Unlimited";
+        } else {
+            ss << "Ammo: " << ammo;
+        }
+        ammoText.setString(ss.str());
     }
 
 
@@ -728,11 +747,11 @@ public:
             roundCounter++;
             spawnMedkit();
             if (roundCounter % 3 != 0){
-            for (int i = 0; i <= roundCounter; i++) {
-                createZombie();
-                createNinja();
-                createSlime();
-            }}
+                for (int i = 0; i <= roundCounter; i++) {
+                    createZombie();
+                    createNinja();
+                    createSlime();
+                }}
 
             if (roundCounter % 3 == 0) {
                 createBoss();
@@ -801,9 +820,8 @@ public:
                             menu.playSound();
                             resetGame(); // Reset the game state
                         } else if (endGameMenu.isMouseOverButton(endGameMenu.playAgainButton, mousePos)) {
-                            gameEnded = false;
-                            gameStarted = true;
                             resetGame(); // Reset the game state
+                            gameStarted = true;
                             gameMusic.setLoop(true);
                             gameMusic.play();
                         } else if (endGameMenu.isMouseOverButton(endGameMenu.exitButton, mousePos)) {
@@ -829,6 +847,8 @@ public:
             menu.stageButton.setTexture(&stageButtonTexture);
         }
     }
+
+
 
     void update() {
         if (gameStarted && !gameEnded) {
@@ -874,45 +894,53 @@ public:
             for (auto& slime : slimes) {
                 slime.shoot(slimeProjectiles, slimeProjectileTexture, hero.getPosition());
             }
+
+            for (auto& projectile : slimeProjectiles) {
+                projectile.update();
+                if (checkCollision(hero, projectile)) {
+                    health -= damage * 500;
+                    updateHealthText();
+                    projectile = slimeProjectiles.back();
+                    slimeProjectiles.pop_back();
+                    if (health <= 0.0) {
+                        gameEnded = true;
+                        gameMusic.stop();
+                        survivalTime = survivalClock.getElapsedTime().asSeconds();
+                        int totalKills = zombiesKilled + Ninja_killed + Slime_killed;
+                        endGameMenu.updateStats(survivalTime, totalKills);
+                    }
+                }
+            }
+            slimeProjectiles.erase(std::remove_if(slimeProjectiles.begin(), slimeProjectiles.end(),
+                                                  [&bounds](const SlimeProjectile& p) {
+                                                      return !bounds.intersects(p.getGlobalBounds());
+                                                  }), slimeProjectiles.end());
+
             for (auto& boss : bosses) {
-                boss.shoot(slimeProjectiles, slimeProjectileTexture, hero.getPosition());
+                boss.shoot(Fireball, fireballtexture, hero.getPosition());
+                boss.step(); // Dodanie kroku animacji
             }
 
-            for (auto& projectile : slimeProjectiles) {
+            for (auto& projectile : Fireball) {
                 projectile.update();
                 if (checkCollision(hero, projectile)) {
                     health -= damage * 500;
                     updateHealthText();
-                    projectile = slimeProjectiles.back();
-                    slimeProjectiles.pop_back();
+                    projectile = Fireball.back();
+                    Fireball.pop_back();
                     if (health <= 0.0) {
                         gameEnded = true;
                         gameMusic.stop();
+                        survivalTime = survivalClock.getElapsedTime().asSeconds();
+                        int totalKills = zombiesKilled + Ninja_killed + Slime_killed;
+                        endGameMenu.updateStats(survivalTime, totalKills);
                     }
                 }
             }
-            slimeProjectiles.erase(std::remove_if(slimeProjectiles.begin(), slimeProjectiles.end(),
-                                                  [&bounds](const SlimeProjectile& p) {
-                                                      return !bounds.intersects(p.getGlobalBounds());
-                                                  }), slimeProjectiles.end());
-
-            for (auto& projectile : slimeProjectiles) {
-                projectile.update();
-                if (checkCollision(hero, projectile)) {
-                    health -= damage * 500;
-                    updateHealthText();
-                    projectile = slimeProjectiles.back();
-                    slimeProjectiles.pop_back();
-                    if (health <= 0.0) {
-                        gameEnded = true;
-                        gameMusic.stop();
-                    }
-                }
-            }
-            slimeProjectiles.erase(std::remove_if(slimeProjectiles.begin(), slimeProjectiles.end(),
-                                                  [&bounds](const SlimeProjectile& p) {
-                                                      return !bounds.intersects(p.getGlobalBounds());
-                                                  }), slimeProjectiles.end());
+            Fireball.erase(std::remove_if(Fireball.begin(), Fireball.end(),
+                                          [&bounds](const class Fireball& p) {
+                                              return !bounds.intersects(p.getGlobalBounds());
+                                          }), Fireball.end());
 
             for (auto& zombie : zombies) {
                 Vector2f zombiePosition = zombie.getPosition();
@@ -954,9 +982,7 @@ public:
                 float moveX = direction.x * move_speed * 0.05;
                 float moveY = direction.y * move_speed * 0.05;
                 boss.moveWithCollision(bounds, moveX, moveY);
-                boss.step();
             }
-
 
             checkHeroZombieCollisions();
             checkHeroNinjaCollisions();
@@ -978,8 +1004,20 @@ public:
         } else if (!gameStarted && !gameEnded) {
             sf::Vector2i mousePos = sf::Mouse::getPosition(window);
             menu.update(mousePos);
+        } else if (gameEnded) {
+            sf::Vector2i mousePos = sf::Mouse::getPosition(window);
+            endGameMenu.update(mousePos);
+
+            if (!timeRecorded) {
+                survivalTime = survivalClock.getElapsedTime().asSeconds();
+                timeRecorded = true;
+            }
+
+            int totalKills = zombiesKilled + Ninja_killed + Slime_killed;
+            endGameMenu.updateStats(survivalTime, totalKills);
         }
     }
+
 
     void render() {
         window.clear();
@@ -1004,15 +1042,19 @@ public:
             for (const auto& slime : slimes) {
                 window.draw(slime);
             }
+            for (const auto& boss : bosses) {
+                window.draw(boss);
+            }
             for (const auto& ammo : ammoPacks) {
                 window.draw(ammo);
             }
-
             for (const auto& bullet : bullets) {
                 window.draw(bullet);
             }
-
             for (const auto& projectile : slimeProjectiles) {
+                window.draw(projectile);
+            }
+            for (const auto& projectile : Fireball) {
                 window.draw(projectile);
             }
 
@@ -1031,6 +1073,8 @@ public:
         }
         window.display();
     }
+
+
 
 
 
