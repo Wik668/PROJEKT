@@ -23,6 +23,7 @@ CONFIG(debug, debug|release){
 }
 
 HEADERS += \
+    Ammo.h \
     AnimatedSprite.h \
     Button.h \
     Medkit.h \
