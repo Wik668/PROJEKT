@@ -17,7 +17,7 @@ public:
     float getHealth() const;
     void add_animation_frame_right(const sf::IntRect& frame);
     void moveWithCollision(const sf::FloatRect& bounds, float dx, float dy);
-
+    void dieAnimation();
 private:
     float speed;
     float health;

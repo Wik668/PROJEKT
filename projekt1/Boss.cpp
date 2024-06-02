@@ -35,8 +35,14 @@ void Boss::step() {
 
 void Boss::takeDamage(int damage) {
     health -= damage;
+    if (health <= 0) {
+       // dieAnimation(); //dodac funckje animacji smierci bossa
+    }
 }
-
+void Boss::dieAnimation()
+{
+    // do uzupelnienia
+}
 float Boss::getHealth() const {
     return health;
 }

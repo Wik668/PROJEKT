@@ -344,6 +344,7 @@ private:
         }
     }
 
+
     void createBoss() {
         const int margin = 50;
         int maxX = window.getSize().x - margin;
