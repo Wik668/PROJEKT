@@ -454,7 +454,7 @@ public:
         createZombie();
         createNinja();
         createSlime();
-        //createBoss();
+        //createBoss();//poprawka
 
         initializeMedkits();
         background_sprite.setTexture(background_texture);
