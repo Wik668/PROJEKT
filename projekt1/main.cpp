@@ -9,6 +9,7 @@
 #include <SFML/System/Vector2.hpp>
 #include "Ammo.h"
 #include "AnimatedSprite.h"
+#include "Boss.h"
 #include "Button.h"
 #include "Zombie.h"
 #include "Slime.h"
@@ -17,6 +18,7 @@
 #include "utils.h"
 #include "Menu.h"
 #include "Medkit.h"
+#include "EndGameMenu.h"
 using namespace std;
 using namespace sf;
 
@@ -27,6 +29,9 @@ class Game {
     sf::Texture ninja_texture;
     vector<Slime> slimes;
     sf::Texture slime_texture;
+    vector<Boss> bosses;
+    sf::Texture boss_texture;
+
 private:
     float health;
     sf::Text healthText;
@@ -41,6 +46,7 @@ private:
     sf::SoundBuffer buffer;
     sf::Sound sound;
     Menu menu;
+    EndGameMenu endGameMenu;
     bool gameStarted;
     bool survivalMode;
     bool gameEnded;
@@ -78,6 +84,8 @@ private:
     Button backButton;
     Button playAgainButton;
     Button exitButton;
+
+
 
 
 
@@ -122,6 +130,11 @@ private:
 
 
     void loadResources() {
+        if (!boss_texture.loadFromFile("boss.png")) {
+            std::cout << "Nie udało się wczytać tekstury bossa" << std::endl;
+            exit(1);
+        }
+
         if (!ninja_texture.loadFromFile("enemy2.png")){
             cout<< "Nie udało się wczytać tekstur Ninjy" <<endl;
             exit(1);
@@ -299,6 +312,50 @@ private:
             zombie.add_animation_frame_right(frame);
         }
     }
+    void addBossAnimationFrames(Boss& boss) {
+        std::vector<IntRect> frames = {
+            IntRect(108, 219, 64, 100),
+            IntRect(397, 221, 64, 100),
+            IntRect(685, 219, 64, 100),
+            IntRect(973, 220, 64, 100),
+            IntRect(1260, 220, 64, 100),
+            IntRect(1549, 220, 64, 100),
+            IntRect(1834, 220, 64, 100),
+            IntRect(2122, 220, 64, 100),
+            IntRect(2410, 220, 64, 100),
+            IntRect(2700, 220, 64, 100),
+            IntRect(2989, 220, 64, 100),
+            IntRect(3276, 220, 64, 100)
+
+        };
+
+        for (const auto& frame : frames) {
+            boss.add_animation_frame_right(frame);
+        }
+    }
+    void createBoss() {
+        const int margin = 50;
+        int maxX = window.getSize().x - margin;
+        int maxY = window.getSize().y - margin;
+        int minX = margin;
+        int minY = margin;
+
+        sf::Vector2f newPosition;
+        do {
+            int posX = rand() % (maxX - minX + 1) + minX;
+            int posY = rand() % (maxY - minY + 1) + minY;
+            newPosition = sf::Vector2f(static_cast<float>(posX), static_cast<float>(posY));
+        } while (!isFarEnough(newPosition, 75.0f));
+
+        Boss boss(5);
+        boss.setTexture(boss_texture);
+        addBossAnimationFrames(boss); // You need to implement this function similarly to how you did for Slime
+        boss.setTextureRect(sf::IntRect(108, 219, 64, 100)); // Set initial frame
+        boss.setScale(2, 2);
+        boss.setPosition(newPosition);
+        boss.step();
+        bosses.push_back(boss);
+    }
 
     void createNinja() {
         const int margin = 50;
@@ -374,9 +431,10 @@ private:
 public:
     Game()
         : health(100), window(sf::VideoMode(window_width, window_height), "Game Window"), hero(5),
+        endGameMenu(),
         gameStarted(false),
-        gameEnded(false),
-        move_speed(0.1f), bullet_speed(0.5f), zombiesKilled(0), Ninja_killed(0), Slime_killed(0),
+        gameEnded(false), move_speed(0.1f), bullet_speed(0.5f), zombiesKilled(0), Ninja_killed(0),
+        Slime_killed(0), // Initialize endGameMenu
         backButton(sf::Vector2f(200, 50), font, "Back to menu", sf::Vector2f(300, 300)),
         playAgainButton(sf::Vector2f(200, 50), font, "Play again", sf::Vector2f(300, 400)),
         exitButton(sf::Vector2f(200, 50), font, "Exit", sf::Vector2f(300, 500)) {
@@ -386,6 +444,7 @@ public:
         createZombie();
         createNinja();
         createSlime();
+
         initializeMedkits();
         background_sprite.setTexture(background_texture);
 
@@ -476,8 +535,20 @@ public:
         }
     }
     void checkHeroSlimeCollisions() {
-        for (auto& ninja : ninjas) {
-            if (checkCollision(hero, ninja)) {
+        for (auto& slime : slimes) {
+            if (checkCollision(hero, slime)) {
+                health -= damage*10;
+                updateHealthText();
+                if (health <= 0.0) {
+                    gameEnded = true;
+                    gameMusic.stop();
+                }
+            }
+        }
+    }
+    void checkHeroBossCollisions() {
+        for (auto& boss : bosses) {
+            if (checkCollision(hero, boss)) {
                 health -= damage*10;
                 updateHealthText();
                 if (health <= 0.0) {
@@ -499,7 +570,36 @@ public:
 
         gameMusic.stop();
     }
+    void resetGame() {
+        // Reset game state variables
+        health = 100;
+        updateHealthText();
+        ammo = 30;
+        reloading = false;
+        unlimitedAmmo = false;
+        bullets.clear();
+        zombies.clear();
+        ninjas.clear();
+        slimes.clear();
+        bosses.clear(); // Clear the bosses if you have them
+        medkits.clear();
+        ammoPacks.clear();
 
+        // Reset kills and time
+        zombiesKilled = 0;
+        Ninja_killed = 0;
+        Slime_killed = 0;
+        updateKillCounterText();
+        updateAmmoText();
+        survivalClock.restart();
+        MedkitClock.restart();
+
+        // Add initial entities again if needed
+        createZombie();
+        createNinja();
+        createSlime();
+        initializeMedkits();
+    }
     void shootBullet() {
         if ((ammo > 0 || unlimitedAmmo) && !reloading) {
             sf::Vector2f heroCenter = hero.getPosition() + sf::Vector2f(hero.getGlobalBounds().width / 2, hero.getGlobalBounds().height / 2);
@@ -593,6 +693,25 @@ public:
                     }
                 }
             }
+            if (!bulletErased) {
+                for (auto bossIt = bosses.begin(); bossIt != bosses.end();) {
+                    if (checkCollision(*bulletIt, *bossIt)) {
+                        bulletIt = bullets.erase(bulletIt);
+                        bossIt->takeDamage(5);
+                        bulletErased = true;
+                        if (bossIt->getHealth() <= 0) {
+                            bossIt = bosses.erase(bossIt);
+                            Slime_killed++;
+                            updateKillCounterText();
+                        } else {
+                            ++bossIt;
+                        }
+                        break;
+                    } else {
+                        ++bossIt;
+                    }
+                }
+            }
 
             if (!bulletErased) {
                 ++bulletIt;
@@ -602,15 +721,29 @@ public:
         bool allZombiesKilled = std::all_of(zombies.begin(), zombies.end(), [](const Zombie& z){ return z.getHealth() <= 0.0; });
         bool allNinjasKilled = std::all_of(ninjas.begin(), ninjas.end(), [](const Ninja& n){ return n.getHealth() <= 0.0; });
         bool allSlimesKilled = std::all_of(slimes.begin(), slimes.end(), [](const Slime& n){ return n.getHealth() <= 0.0; });
-        if (allZombiesKilled && zombies.empty()&& allSlimesKilled && slimes.empty() && allNinjasKilled && ninjas.empty()) {
-            static int counter = 0 ;
-            counter++;
+        bool allBossesKilled = std::all_of(bosses.begin(), bosses.end(), [](const Boss& n){ return n.getHealth() <= 0.0; });
+        if (allZombiesKilled && zombies.empty()&& allBossesKilled && bosses.empty()&& allSlimesKilled && slimes.empty() && allNinjasKilled && ninjas.empty()) {
+            static int roundCounter = 0;
+            static int licz=0;
+            roundCounter++;
             spawnMedkit();
-            for(int i=0;i<=counter;i++){
+            if (roundCounter % 3 != 0){
+            for (int i = 0; i <= roundCounter; i++) {
                 createZombie();
                 createNinja();
                 createSlime();
             }}
+
+            if (roundCounter % 3 == 0) {
+                createBoss();
+                licz++;
+                for (int i = 0; i <= licz; i++) {
+                    createZombie();
+                    createNinja();
+                    createSlime();
+                }
+            }
+        }
     }
 
 
@@ -635,7 +768,11 @@ public:
                 }
             } else if (event.type == sf::Event::MouseMoved) {
                 sf::Vector2i mousePos = sf::Mouse::getPosition(window);
-                updateButtonColors(mousePos);
+                if (gameEnded) {
+                    endGameMenu.update(mousePos);
+                } else {
+                    updateButtonColors(mousePos);
+                }
             } else if (event.type == sf::Event::MouseButtonPressed) {
                 if (event.mouseButton.button == sf::Mouse::Left) {
                     sf::Vector2i mousePos = sf::Mouse::getPosition(window);
@@ -658,23 +795,19 @@ public:
                             gameMusic.play();
                         }
                     } else if (gameEnded) {
-                        if (backButton.contains(sf::Vector2f(mousePos))) {
-                            // Handle "Back to menu"
-                            // Reset game state or navigate to menu
-                        } else if (playAgainButton.contains(sf::Vector2f(mousePos))) {
-                            // Handle "Play again"
-                            // Reset game state and start a new game
-                        } else if (exitButton.contains(sf::Vector2f(mousePos))) {
+                        if (endGameMenu.isMouseOverButton(endGameMenu.backToMenuButton, mousePos)) {
+                            gameEnded = false;
+                            gameStarted = false;
+                            menu.playSound();
+                            resetGame(); // Reset the game state
+                        } else if (endGameMenu.isMouseOverButton(endGameMenu.playAgainButton, mousePos)) {
+                            gameEnded = false;
+                            gameStarted = true;
+                            resetGame(); // Reset the game state
+                            gameMusic.setLoop(true);
+                            gameMusic.play();
+                        } else if (endGameMenu.isMouseOverButton(endGameMenu.exitButton, mousePos)) {
                             window.close();
-                        } else if (event.type == sf::Event::MouseMoved) {
-                            sf::Vector2i mousePos = sf::Mouse::getPosition(window);
-                            if (gameEnded) {
-                                backButton.setSelected(backButton.contains(sf::Vector2f(mousePos)));
-                                playAgainButton.setSelected(playAgainButton.contains(sf::Vector2f(mousePos)));
-                                exitButton.setSelected(exitButton.contains(sf::Vector2f(mousePos)));
-                            } else {
-                                updateButtonColors(mousePos);
-                            }
                         }
                     }
                 }
@@ -741,6 +874,27 @@ public:
             for (auto& slime : slimes) {
                 slime.shoot(slimeProjectiles, slimeProjectileTexture, hero.getPosition());
             }
+            for (auto& boss : bosses) {
+                boss.shoot(slimeProjectiles, slimeProjectileTexture, hero.getPosition());
+            }
+
+            for (auto& projectile : slimeProjectiles) {
+                projectile.update();
+                if (checkCollision(hero, projectile)) {
+                    health -= damage * 500;
+                    updateHealthText();
+                    projectile = slimeProjectiles.back();
+                    slimeProjectiles.pop_back();
+                    if (health <= 0.0) {
+                        gameEnded = true;
+                        gameMusic.stop();
+                    }
+                }
+            }
+            slimeProjectiles.erase(std::remove_if(slimeProjectiles.begin(), slimeProjectiles.end(),
+                                                  [&bounds](const SlimeProjectile& p) {
+                                                      return !bounds.intersects(p.getGlobalBounds());
+                                                  }), slimeProjectiles.end());
 
             for (auto& projectile : slimeProjectiles) {
                 projectile.update();
@@ -792,10 +946,22 @@ public:
                 slime.moveWithCollision(bounds, moveX, moveY);
                 slime.step();
             }
+            for (auto& boss : bosses) {
+                Vector2f bossPosition = boss.getPosition();
+                Vector2f direction = playerPosition - bossPosition;
+                direction = normalize(direction);
+
+                float moveX = direction.x * move_speed * 0.05;
+                float moveY = direction.y * move_speed * 0.05;
+                boss.moveWithCollision(bounds, moveX, moveY);
+                boss.step();
+            }
+
 
             checkHeroZombieCollisions();
             checkHeroNinjaCollisions();
             checkHeroSlimeCollisions();
+            checkHeroBossCollisions();
 
             if (survivalMode) {
                 Time elapsed = survivalClock.getElapsedTime();
@@ -858,16 +1024,14 @@ public:
             window.draw(ammoText);
 
             if (gameEnded) {
-                window.draw(endGameText);
-                backButton.draw(window);
-                playAgainButton.draw(window);
-                exitButton.draw(window);
+                endGameMenu.draw(window);
             }
         } else {
             menu.draw(window);
         }
         window.display();
     }
+
 
 
     void updateKillCounterText() {

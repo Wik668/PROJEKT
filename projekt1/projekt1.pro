@@ -6,7 +6,9 @@ CONFIG += gui
 
 SOURCES += \
         AnimatedSprite.cpp \
+        Boss.cpp \
         Button.cpp \
+        EndGameMenu.cpp \
         Medkit.cpp \
         Menu.cpp \
         Slime.cpp \
@@ -25,7 +27,9 @@ CONFIG(debug, debug|release){
 HEADERS += \
     Ammo.h \
     AnimatedSprite.h \
+    Boss.h \
     Button.h \
+    EndGameMenu.h \
     Medkit.h \
     Menu.h \
     Slime.h \
