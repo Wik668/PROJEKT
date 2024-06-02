@@ -19,7 +19,7 @@ Menu::Menu() : selectedSurvival(true) {
     background_sprite.setTexture(background_texture);
 
     text.setFont(font);
-    text.setString("Press ENTER to start game");
+    text.setString("Select game");
     text.setCharacterSize(24);
     text.setFillColor(sf::Color::White);
     text.setPosition(250, 300);

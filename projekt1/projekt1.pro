@@ -7,7 +7,9 @@ CONFIG += gui
 SOURCES += \
         AnimatedSprite.cpp \
         Button.cpp \
+        Medkit.cpp \
         Menu.cpp \
+        Slime.cpp \
         bullet.cpp \
         main.cpp \
         ninja.cpp \
@@ -23,7 +25,10 @@ CONFIG(debug, debug|release){
 HEADERS += \
     AnimatedSprite.h \
     Button.h \
+    Medkit.h \
     Menu.h \
+    Slime.h \
+    SlimeProjectile.h \
     bullet.h \
     ninja.h \
     utils.h \

@@ -1,14 +1,15 @@
-#ifndef ZOMBIE_H
-#define ZOMBIE_H
+#ifndef SLIME_H
+#define SLIME_H
+#include "SlimeProjectile.h"
 
 #include <SFML/Graphics.hpp>
 #include <vector>
 
-class Zombie : public sf::Sprite {
+class Slime : public sf::Sprite {
 public:
     enum Direction { Right, Left, Up, Down };
 
-    Zombie(int fps);
+    Slime(int fps);
 
     void moveWithCollision(const sf::FloatRect& bounds, float offsetX, float offsetY);
 
@@ -24,8 +25,12 @@ public:
     void takeDamage(int damage);
     void heal(int amount);
 
-    Zombie clone() const;
+    Slime clone() const;
+public:
+    void shoot(std::vector<SlimeProjectile>& slimeProjectiles, const sf::Texture& projectileTexture, sf::Vector2f target);
 
+private:
+    sf::Clock shootClock;
 private:
     std::vector<sf::IntRect> framesRight;
     std::vector<sf::IntRect> framesLeft;
@@ -43,4 +48,4 @@ private:
     sf::Time frameTime;
 };
 
-#endif // ZOMBIE_H
+#endif // slime_H
