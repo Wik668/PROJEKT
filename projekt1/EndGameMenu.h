@@ -37,6 +37,8 @@ public:
     bool isMouseOverButton(const sf::RectangleShape& button, const sf::Vector2i& mousePosition) const;
     void update(const sf::Vector2i& mousePosition);
     void updateStats(float survivalTime, int killCount);
+    void setEndMessage(const std::string& message); // Add this method
+    void setTimeLabel(const std::string& label);    // Add this method
 };
 
 #endif // ENDGAMEMENU_H

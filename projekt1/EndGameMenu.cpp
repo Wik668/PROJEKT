@@ -147,10 +147,21 @@ void EndGameMenu::updateSelection() {
 
 void EndGameMenu::updateStats(float survivalTime, int killCount) {
     std::stringstream ss;
-    ss << "Survival Time: " << std::fixed << std::setprecision(1) << survivalTime << " seconds";
+    ss << "Time: " << std::fixed << std::setprecision(1) << survivalTime << " seconds";
     survivalTimeText.setString(ss.str());
 
     ss.str("");
     ss << "Kills: " << killCount;
     killCountText.setString(ss.str());
+}
+
+void EndGameMenu::setEndMessage(const std::string& message) {
+    gameOverText.setString(message);
+    gameOverText.setPosition(250, 100); // Adjust position as needed
+}
+
+void EndGameMenu::setTimeLabel(const std::string& label) {
+    std::string currentText = survivalTimeText.getString();
+    std::string newText = label + currentText.substr(currentText.find(":"));
+    survivalTimeText.setString(newText);
 }
