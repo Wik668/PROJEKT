@@ -14,6 +14,12 @@ EndGameMenu::EndGameMenu() : selectedBackToMenu(true) {
         std::cout << "Nie udało się wczytać dźwięku menu" << std::endl;
     }
 
+    if (!endGameMusic.openFromFile("end_game_music.wav")) {
+        std::cout << "Nie udało się wczytać muzyki końcowej gry" << std::endl;
+    } else {
+        std::cout << "Muzyka końcowa gry została pomyślnie wczytana." << std::endl;
+    }
+
     sound.setBuffer(buffer);
     sound.setLoop(true);
 
@@ -80,6 +86,16 @@ void EndGameMenu::playSound() {
 
 void EndGameMenu::stopSound() {
     sound.stop();
+}
+
+void EndGameMenu::playMusic() {
+    std::cout << "Odtwarzanie muzyki końcowej gry." << std::endl;
+    endGameMusic.setLoop(true);
+    endGameMusic.play();
+}
+
+void EndGameMenu::stopMusic() {
+    endGameMusic.stop();
 }
 
 void EndGameMenu::draw(sf::RenderWindow& window) {
