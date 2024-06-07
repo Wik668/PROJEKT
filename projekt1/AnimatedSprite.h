@@ -1,44 +1,41 @@
-#ifndef ANIMATED_SPRITE_H  // Sprawdza, czy ANIMATED_SPRITE_H nie jest już zdefiniowane
-#define ANIMATED_SPRITE_H  // Definiuje ANIMATED_SPRITE_H
+#pragma once
 
-#include <SFML/Graphics.hpp>  // Dołącza bibliotekę SFML Graphics
-#include <vector>  // Dołącza bibliotekę vector
+#include <SFML/Graphics.hpp>
+#include <vector>
 
-using namespace sf;  // przestrzen nazw sf (SFML)
-using namespace std;  // standardowej przestrzen nazw zeby nie uzywac std::
+using namespace sf;
+using namespace std;
 
-class AnimatedSprite : public Sprite {  // Definiuje klasę AnimatedSprite, która dziedziczy po klasie Sprite
-private:
-    vector<IntRect> framesRight;  // Wektor przechowujący ramki animacji poruszania się w prawo
-    vector<IntRect> framesLeft;  // Wektor przechowujący ramki animacji poruszania się w lewo
-    vector<IntRect> framesUp;  // Wektor przechowujący ramki animacji poruszania się do góry
-    vector<IntRect> framesDown;  // Wektor przechowujący ramki animacji poruszania się w dół
-    int currentFrame;  // Aktualna ramka animacji
-    int animationFps;  // Liczba klatek na sekundę dla animacji
-    Time frameTime;  // Czas trwania jednej ramki
-    Clock clock;  // Zegar do śledzenia czasu
-    enum Direction { Up, Down, Left, Right } direction;  // Wyliczenie kierunków
-
+class AnimatedSprite : public Sprite {
 public:
-    AnimatedSprite(int fps);  // Konstruktor klasy
+    enum Direction { Right, Left, Up, Down };
 
-    // Metody do dodawania ramek animacji dla różnych kierunków
+    AnimatedSprite(int fps);
+
     void add_animation_frame_right(const IntRect& frame);
     void add_animation_frame_left(const IntRect& frame);
     void add_animation_frame_up(const IntRect& frame);
     void add_animation_frame_down(const IntRect& frame);
 
-    // Metody do dodawania ramek stojących dla różnych kierunków
     void add_standing_frame_right(const IntRect& frame);
     void add_standing_frame_left(const IntRect& frame);
     void add_standing_frame_up(const IntRect& frame);
     void add_standing_frame_down(const IntRect& frame);
 
-    void step();  // Metoda do przesuwania animacji o jeden krok
-    void moveWithCollision(const FloatRect& bounds, float offsetX, float offsetY);  // Metoda do poruszania się z detekcją kolizji
+    void step();
+    void moveWithCollision(const FloatRect& bounds, float offsetX, float offsetY);
+    void initializeHero(const Texture& character_texture);
 
 private:
-    const vector<IntRect>& getFrames() const;  // Metoda do pobierania odpowiedniego wektora ramek w zależności od kierunku
-};
+    vector<IntRect> framesRight;
+    vector<IntRect> framesLeft;
+    vector<IntRect> framesUp;
+    vector<IntRect> framesDown;
+    Clock clock;
+    Time frameTime;
+    int currentFrame;
+    int animationFps;
+    Direction direction;
 
-#endif // ANIMATED_SPRITE_H
+    const vector<IntRect>& getFrames() const;
+};

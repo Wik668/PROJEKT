@@ -15,6 +15,7 @@ private:
     sf::Sprite background_sprite;
     sf::SoundBuffer buffer;
     sf::Sound sound;
+    sf::Music endGameMusic; // Dodanie obiektu sf::Music
     sf::Text backToMenuText;
     sf::Text playAgainText;
     sf::Text exitText;
@@ -30,6 +31,8 @@ public:
     EndGameMenu();
     void playSound();
     void stopSound();
+    void playMusic(); // Dodanie metody do odtwarzania muzyki
+    void stopMusic(); // Dodanie metody do zatrzymania muzyki
     void draw(sf::RenderWindow& window);
     void moveSelectionUp();
     void moveSelectionDown();
@@ -37,8 +40,8 @@ public:
     bool isMouseOverButton(const sf::RectangleShape& button, const sf::Vector2i& mousePosition) const;
     void update(const sf::Vector2i& mousePosition);
     void updateStats(float survivalTime, int killCount);
-    void setEndMessage(const std::string& message); // Add this method
-    void setTimeLabel(const std::string& label);    // Add this method
+    void setEndMessage(const std::string& message);
+    void setTimeLabel(const std::string& label);
 };
 
 #endif // ENDGAMEMENU_H

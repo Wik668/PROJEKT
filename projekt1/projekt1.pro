@@ -5,6 +5,7 @@ CONFIG -= qt
 CONFIG += gui
 
 SOURCES += \
+        Ammo.cpp \
         AnimatedSprite.cpp \
         Boss.cpp \
         Button.cpp \
@@ -15,6 +16,7 @@ SOURCES += \
         bullet.cpp \
         main.cpp \
         ninja.cpp \
+        syringe.cpp \
         zombie.cpp
 INCLUDEPATH += "C:/SFML-2.5.1/include"
 LIBS += -L"C:/SFML-2.5.1/lib"
@@ -37,5 +39,6 @@ HEADERS += \
     SlimeProjectile.h \
     bullet.h \
     ninja.h \
+    syringe.h \
     utils.h \
     zombie.h
