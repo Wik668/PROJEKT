@@ -1,3 +1,4 @@
+
 #include <SFML/Window.hpp>
 #include <SFML/Graphics.hpp>
 #include <iostream>
@@ -110,39 +111,9 @@ private:
         sf::Vector2f heroPosition = hero.getPosition();
         return std::abs(position.x - heroPosition.x) >= distance && std::abs(position.y - heroPosition.y) >= distance;
     }
-    void spawnAmmo() {
-        const int margin = 50;
-        int maxX = window.getSize().x - margin;
-        int maxY = window.getSize().y - margin;
-        int minX = margin;
-        int minY = margin;
 
-        sf::Vector2f newPosition;
-        do {
-            int posX = rand() % (maxX - minX + 1) + minX;
-            int posY = rand() % (maxY - minY + 1) + minY;
-            newPosition = sf::Vector2f(static_cast<float>(posX), static_cast<float>(posY));
-        } while (!isFarEnough(newPosition, 75.0f));
 
-        ammoPacks.emplace_back(newPosition.x, newPosition.y, ammo_texture);
-        ammoRespawnClock.restart();
-    }
 
-    void checkHeroAmmoCollisions() {
-        for (auto it = ammoPacks.begin(); it != ammoPacks.end();) {
-            if (checkCollision(hero, *it)) {
-                unlimitedAmmo = true;
-                unlimitedAmmoClock.restart();
-                it = ammoPacks.erase(it); // Usuń zebrane ammo
-                if (reloading) {
-                    reloading = false;
-                    updateAmmoText();
-                }
-            } else {
-                ++it;
-            }
-        }
-    }
 
     void checkHeroSyringeCollisions() {
         for (auto it = syringes.begin(); it != syringes.end();) {
@@ -163,8 +134,8 @@ private:
             std::cout << "Nie udało się wczytać tekstury bossa" << std::endl;
             exit(1);
         }
-        if (!syringe_texture.loadFromFile("syringe.png")) {
-            std::cout << "Nie udało się wczytać tekstury Syringe" << std::endl;
+        if (!syringe_texture.loadFromFile("food.png")) {
+            std::cout << "Nie udało się wczytać tekstury food" << std::endl;
             exit(1);
         }
 
@@ -229,41 +200,9 @@ private:
     void stopSound() {
         sound.stop();
     }
-    void spawnSyringe() {
-        const int margin = 50;
-        int maxX = window.getSize().x - margin;
-        int maxY = window.getSize().y - margin;
-        int minX = margin;
-        int minY = margin;
 
-        sf::Vector2f newPosition;
-        do {
-            int posX = rand() % (maxX - minX + 1) + minX;
-            int posY = rand() % (maxY - minY + 1) + minY;
-            newPosition = sf::Vector2f(static_cast<float>(posX), static_cast<float>(posY));
-        } while (!isFarEnough(newPosition, 75.0f));
 
-        createSyringe(newPosition.x, newPosition.y);
-        syringeRespawnClock.restart();
-    }
 
-    void initializeMedkits() {
-        for (int i = 0; i < 3; ++i) {
-            const int margin = 50;
-            int maxX = window.getSize().x - margin;
-            int maxY = window.getSize().y - margin;
-            int minX = margin;
-            int minY = margin;
-
-            // Generowanie losowej pozycji z uwzględnieniem marginesu
-            int posX = rand() % (maxX - minX + 1) + minX;
-            int posY = rand() % (maxY - minY + 1) + minY;
-
-            // Tworzenie apteczki w losowej pozycji
-            createMedkit(posX, posY);
-
-        }
-    }
     void showEndGameMenu(bool playerWon, float survivalTime, int killCount) {
         if (playerWon) {
             endGameMenu.setEndMessage("Congratulations");
@@ -366,20 +305,8 @@ private:
 
 
 
-    void createMedkit(float x, float y) {
-        Medkit medkit(20.0f); // Przykładowa wartość leczenia
-        medkit.setTexture(medkit_texture);
-        medkit.setPosition(x, y);
-        medkit.setScale(0.09, 0.09); // Skalowanie jeśli potrzebne
-        medkits.push_back(medkit);
-    }
-    void createSyringe(float x, float y) {
-        Syringe syringe(5.0f); // Example effect duration
-        syringe.setTexture(syringe_texture);
-        syringe.setPosition(x, y);
-        syringe.setScale(0.09f, 0.09f); // Scale if needed
-        syringes.push_back(syringe);
-    }
+
+
 
     void checkHeroMedkitCollisions() {
         for (auto it = medkits.begin(); it != medkits.end();) {
@@ -393,36 +320,7 @@ private:
         }
     }
 
-    void initializeHero() {
-        hero.setTexture(character_texture);
-        hero.add_animation_frame_right(IntRect(9, 70, 14, 25));
-        hero.add_animation_frame_right(IntRect(41, 70, 14, 25));
-        hero.add_animation_frame_right(IntRect(73, 70, 14, 25));
-        hero.add_animation_frame_right(IntRect(105, 70, 14, 25));
-        hero.add_standing_frame_right(IntRect(134, 70, 14, 25));
 
-        hero.add_animation_frame_left(IntRect(10, 102, 14, 25));
-        hero.add_animation_frame_left(IntRect(41, 102, 14, 25));
-        hero.add_animation_frame_left(IntRect(73, 102, 14, 25));
-        hero.add_animation_frame_left(IntRect(105, 102, 14, 25));
-        hero.add_standing_frame_left(IntRect(134, 102, 14, 25));
-
-        hero.add_animation_frame_up(IntRect(10, 38, 14, 25));
-        hero.add_animation_frame_up(IntRect(41, 38, 14, 25));
-        hero.add_animation_frame_up(IntRect(73, 38, 14, 25));
-        hero.add_animation_frame_up(IntRect(105, 38, 14, 25));
-        hero.add_standing_frame_up(IntRect(134, 38, 14, 25));
-
-        hero.add_animation_frame_down(IntRect(9, 6, 14, 25));
-        hero.add_animation_frame_down(IntRect(41, 6, 14, 25));
-        hero.add_animation_frame_down(IntRect(73, 6, 14, 25));
-        hero.add_animation_frame_down(IntRect(105, 6, 14, 25));
-        hero.add_standing_frame_down(IntRect(134, 6, 14, 25));
-
-        hero.setScale(2,2);
-        hero.setPosition(250, 250);
-
-    }
 
     void addNinjaAnimationFrames(Ninja& ninja) {
         std::vector<IntRect> frames = {
@@ -624,20 +522,30 @@ private:
     }
 public:
     Game()
-        : health(9999), window(sf::VideoMode(window_width, window_height), "Game Window"), hero(5),
+        : health(100),
+        window(sf::VideoMode(window_width, window_height), "Jerry_The_Killer"),
+        hero(5),
         endGameMenu(),
         gameStarted(false),
-        gameEnded(false), move_speed(0.1f), bullet_speed(0.5f), // Inicjalizacja zmiennych
-        zombiesKilled(0), Ninja_killed(0), Slime_killed(0), backButton(sf::Vector2f(200, 50), font, "Back to menu", sf::Vector2f(300, 300)),
-        playAgainButton(sf::Vector2f(200, 50), font, "Play again", sf::Vector2f(300, 400)), // Initialize endGameMenu
+        gameEnded(false),
+        move_speed(0.1f),
+        bullet_speed(0.5f),
+        zombiesKilled(0),
+        Ninja_killed(0),
+        Slime_killed(0),
+        backButton(sf::Vector2f(200, 50), font, "Back to menu", sf::Vector2f(300, 300)),
+        playAgainButton(sf::Vector2f(200, 50), font, "Play again", sf::Vector2f(300, 400)),
         exitButton(sf::Vector2f(200, 50), font, "Exit", sf::Vector2f(300, 500)),
         timeRecorded(false),
         survivalTime(0.0f),
-        roundCounter(0), // Initialize counters
-        licz(0), showingRoundText(false), roundStarted(false)    {
+        roundCounter(0),
+        licz(0),
+        showingRoundText(false),
+        roundStarted(false)
+    {
 
         loadResources();
-        initializeHero();
+        hero.initializeHero(character_texture);
         // createZombie();
         // createNinja();
         // createSlime();
@@ -693,38 +601,7 @@ public:
         ss << std::fixed << std::setprecision(1) << displayHealth;
         healthText.setString("HP: " + ss.str());
     }
-    void spawnMedkit() {
-        const int margin = 50;
-        int maxX = window.getSize().x - margin;
-        int maxY = window.getSize().y - margin;
-        int minX = margin;
-        int minY = margin;
 
-        sf::Vector2f newPosition;
-        do {
-            int posX = rand() % (maxX - minX + 1) + minX;
-            int posY = rand() % (maxY - minY + 1) + minY;
-            newPosition = sf::Vector2f(static_cast<float>(posX), static_cast<float>(posY));
-        } while (!isFarEnough(newPosition, 75.0f));
-        createMedkit(newPosition.x, newPosition.y);
-        MedkitClock.restart();
-    }
-    void spawnsyringe() {
-        const int margin = 50;
-        int maxX = window.getSize().x - margin;
-        int maxY = window.getSize().y - margin;
-        int minX = margin;
-        int minY = margin;
-
-        sf::Vector2f newPosition;
-        do {
-            int posX = rand() % (maxX - minX + 1) + minX;
-            int posY = rand() % (maxY - minY + 1) + minY;
-            newPosition = sf::Vector2f(static_cast<float>(posX), static_cast<float>(posY));
-        } while (!isFarEnough(newPosition, 75.0f));
-        createSyringe(newPosition.x, newPosition.y);
-        syringeClock.restart();
-    }
 
     void checkHeroZombieCollisions() {
         for (auto& zombie : zombies) {
@@ -1137,8 +1014,7 @@ public:
                 }
             } else {
                 if (ammoRespawnClock.getElapsedTime().asSeconds() >= 15.0f) {
-                    spawnAmmo();
-                    ammoRespawnClock.restart();
+                    Ammo::spawnAmmo(ammoPacks, ammo_texture, window, ammoRespawnClock, hero, 75.0f);
                 }
             }
 
@@ -1151,20 +1027,20 @@ public:
                 }
             }
             if (syringeRespawnClock.getElapsedTime().asSeconds() >= 15.0f) {
-                spawnsyringe();
+                Syringe::spawnSyringe(syringes,syringe_texture,window,syringeRespawnClock,hero,75.0f);
                 syringeRespawnClock.restart();
             }
 
             // Medkit respawn logic
             if (medkitRespawnClock.getElapsedTime().asSeconds() >= 15.0f) {
-                spawnMedkit();
+                Medkit::createMedkit(medkits, medkit_texture, window, hero, 75.0f);
                 medkitRespawnClock.restart();
             }
 
             // Existing update logic...
             FloatRect bounds(0, 0, window_width, window_height);
             checkHeroMedkitCollisions();
-            checkHeroAmmoCollisions();
+            Ammo::checkHeroAmmoCollisions(ammoPacks, hero, unlimitedAmmo, unlimitedAmmoClock, reloading, [this](){ updateAmmoText(); });
 
             if (Keyboard::isKeyPressed(Keyboard::A)) {
                 hero.moveWithCollision(bounds, -move_speed, 0);
