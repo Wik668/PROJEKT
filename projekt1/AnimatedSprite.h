@@ -36,6 +36,17 @@ private:
     int currentFrame;
     int animationFps;
     Direction direction;
-
+public:
     const vector<IntRect>& getFrames() const;
+    void setInvulnerable(bool invulnerable) {
+        this->invulnerable = invulnerable;
+    }
+
+    bool isInvulnerable() const {
+        return invulnerable;
+    }
+
+private:
+    bool invulnerable = false;
+
 };

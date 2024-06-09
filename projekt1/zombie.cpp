@@ -1,4 +1,7 @@
-#include "zombie.h"
+#include "Zombie.h"
+#include "SFML/Graphics/Rect.hpp"
+#include <cmath>
+#include <functional>
 
 Zombie::Zombie(int fps) : currentFrame(0), animationFps(fps), health(100), direction(Right) {}
 
@@ -77,4 +80,66 @@ Zombie Zombie::clone() const {
     Zombie clone(*this);
     clone.clock.restart(); // Reset clock for the clone
     return clone;
+}
+
+void Zombie::addZombieAnimationFrames() {
+    std::vector<sf::IntRect> frames = {
+        sf::IntRect(11, 69, 14, 26),
+        sf::IntRect(42, 69, 14, 26),
+        sf::IntRect(74, 69, 14, 26),
+        sf::IntRect(107, 69, 14, 26),
+        sf::IntRect(140, 69, 14, 26),
+        sf::IntRect(173, 69, 14, 26),
+        sf::IntRect(204, 69, 14, 26),
+        sf::IntRect(231, 100, 17, 26),
+        sf::IntRect(269, 69, 14, 26),
+        sf::IntRect(300, 69, 14, 26)
+    };
+
+    for (const auto& frame : frames) {
+        add_animation_frame_right(frame);
+    }
+}
+
+bool Zombie::isFarEnough(const sf::Vector2f& pos1, const sf::Vector2f& pos2, float minDistance) {
+    return std::hypot(pos1.x - pos2.x, pos1.y - pos2.y) > minDistance;
+}
+
+void Zombie::createZombie(std::vector<Zombie>& zombies, sf::Texture& zombie_texture, sf::RenderWindow& window) {
+    const int margin = 50;
+    int maxX = window.getSize().x - margin;
+    int maxY = window.getSize().y - margin;
+    int minX = margin;
+    int minY = margin;
+
+    sf::Vector2f newPosition;
+    do {
+        int posX = rand() % (maxX - minX + 1) + minX;
+        int posY = rand() % (maxY - minY + 1) + minY;
+        newPosition = sf::Vector2f(static_cast<float>(posX), static_cast<float>(posY));
+    } while (!Zombie::isFarEnough(newPosition, {0, 0}, 75.0f)); // Assuming {0, 0} as a placeholder for hero position
+
+    Zombie zombie(5);
+    zombie.setTexture(zombie_texture);
+    zombie.addZombieAnimationFrames();
+    zombie.setTextureRect(sf::IntRect(11, 69, 14, 26));
+    zombie.setScale(2, 2);
+    zombie.setPosition(newPosition);
+    zombie.step();
+    zombies.push_back(zombie);
+}
+
+void Zombie::checkHeroZombieCollisions(std::vector<Zombie>& zombies, sf::Sprite& hero, float& health, bool invulnerable, float damage, bool& gameEnded, sf::Music& gameMusic, std::function<void()> updateHealthText) {
+    for (auto& zombie : zombies) {
+        if (hero.getGlobalBounds().intersects(zombie.getGlobalBounds())) {
+            if (!invulnerable) {
+                health -= damage;
+                updateHealthText();
+                if (health <= 0.0) {
+                    gameEnded = true;
+                    gameMusic.stop();
+                }
+            }
+        }
+    }
 }

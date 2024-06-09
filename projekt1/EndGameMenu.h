@@ -4,6 +4,8 @@
 #include <SFML/Graphics.hpp>
 #include <SFML/Audio.hpp>
 #include <iostream>
+#include <functional>
+#include <Menu.h>
 
 class EndGameMenu {
 private:
@@ -15,7 +17,7 @@ private:
     sf::Sprite background_sprite;
     sf::SoundBuffer buffer;
     sf::Sound sound;
-    sf::Music endGameMusic; // Dodanie obiektu sf::Music
+    sf::Music endGameMusic;
     sf::Text backToMenuText;
     sf::Text playAgainText;
     sf::Text exitText;
@@ -31,8 +33,8 @@ public:
     EndGameMenu();
     void playSound();
     void stopSound();
-    void playMusic(); // Dodanie metody do odtwarzania muzyki
-    void stopMusic(); // Dodanie metody do zatrzymania muzyki
+    void playMusic();
+    void stopMusic();
     void draw(sf::RenderWindow& window);
     void moveSelectionUp();
     void moveSelectionDown();
@@ -42,6 +44,7 @@ public:
     void updateStats(float survivalTime, int killCount);
     void setEndMessage(const std::string& message);
     void setTimeLabel(const std::string& label);
+    void showEndGameMenu(bool playerWon, float survivalTime, int killCount, sf::RenderWindow& window, bool& gameStarted, bool& gameEnded, bool& survivalMode, sf::Music& gameMusic, sf::Clock& survivalClock, Menu& menu, std::function<void()> resetGame, std::function<void(int)> startRound);
 };
 
 #endif // ENDGAMEMENU_H

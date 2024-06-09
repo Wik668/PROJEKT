@@ -1,9 +1,11 @@
 #ifndef SLIME_H
 #define SLIME_H
-#include "SlimeProjectile.h"
 
+#include "SlimeProjectile.h"
 #include <SFML/Graphics.hpp>
+#include <SFML/Audio.hpp> // Include SFML Audio module
 #include <vector>
+#include <functional>
 
 class Slime : public sf::Sprite {
 public:
@@ -17,6 +19,7 @@ public:
     void add_animation_frame_left(const sf::IntRect& frame);
     void add_animation_frame_up(const sf::IntRect& frame);
     void add_animation_frame_down(const sf::IntRect& frame);
+    void addSlimeAnimationFrames();
 
     void step();
 
@@ -26,12 +29,13 @@ public:
     void heal(int amount);
 
     Slime clone() const;
-public:
+
     void shoot(std::vector<SlimeProjectile>& slimeProjectiles, const sf::Texture& projectileTexture, sf::Vector2f target);
+    static void createSlime(std::vector<Slime>& slimes, sf::Texture& slime_texture, sf::RenderWindow& window, const sf::Vector2f& heroPosition);
+    static void checkHeroSlimeCollisions(std::vector<Slime>& slimes, sf::Sprite& hero, float& health, bool invulnerable, float damage, bool& gameEnded, sf::Music& gameMusic, std::function<void()> updateHealthText);
 
 private:
     sf::Clock shootClock;
-private:
     std::vector<sf::IntRect> framesRight;
     std::vector<sf::IntRect> framesLeft;
     std::vector<sf::IntRect> framesUp;
@@ -46,6 +50,8 @@ private:
     Direction direction;
     sf::Clock clock;
     sf::Time frameTime;
+
+    static bool isFarEnough(const sf::Vector2f& pos1, const sf::Vector2f& pos2, float minDistance);
 };
 
-#endif // slime_H
+#endif // SLIME_H

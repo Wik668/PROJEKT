@@ -13,7 +13,6 @@ SOURCES += \
         Medkit.cpp \
         Menu.cpp \
         Slime.cpp \
-        Syringe.cpp \
         bullet.cpp \
         main.cpp \
         ninja.cpp \
@@ -38,9 +37,9 @@ HEADERS += \
     Menu.h \
     Slime.h \
     SlimeProjectile.h \
-    Syringe.h \
     bullet.h \
     ninja.h \
+    syringe.h \
     syringe.h \
     utils.h \
     zombie.h

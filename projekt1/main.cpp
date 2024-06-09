@@ -1,4 +1,3 @@
-
 #include <SFML/Window.hpp>
 #include <SFML/Graphics.hpp>
 #include <iostream>
@@ -22,7 +21,6 @@
 #include "Menu.h"
 #include "Medkit.h"
 #include "EndGameMenu.h"
-
 using namespace std;
 using namespace sf;
 
@@ -38,11 +36,14 @@ class Game {
     std::vector<Syringe> syringes;
     sf::Texture syringe_texture;
     sf::Clock syringeClock;
+    sf::Clock shootClock;
     bool invulnerable = false;
-
-
 private:
+
+    bool tripleShotActive = false;
+    sf::Clock tripleShotClock;
     float health;
+    float orgmove_speed = 0.1;
     sf::Text healthText;
     int window_width = 800;
     int window_height = 600;
@@ -76,32 +77,31 @@ private:
     sf::Texture stageButtonTexture;
     sf::Texture stageButtonTextureRed;
     sf::Text endGameText;
-    float damage = 0.00001;
+    float damage = 0.001;
     std::vector<SlimeProjectile> slimeProjectiles;
     std::vector<Fireball> Fireball;
     sf::Texture fireballtexture;
     sf::Texture slimeProjectileTexture;
     sf::Texture medkit_texture;
     std::vector<Medkit> medkits;
-    int ammo = 30; // maximum bullets the hero can shoot before reloading
-    bool reloading = false; // indicates if the hero is reloading
+    int ammo = 30;
+    bool reloading = false;
     sf::Clock reloadClock;
-    std::vector<Ammo> ammoPacks; // Vector to store ammo packs
-    sf::Texture ammo_texture; // Texture for ammo packs
-    sf::Clock ammoRespawnClock; // Clock to manage ammo respawn time
-    sf::Clock unlimitedAmmoClock; // Clock to manage unlimited ammo duration
-    bool unlimitedAmmo = false;    // clock to measure reloading time
+    std::vector<Ammo> ammoPacks;
+    sf::Texture ammo_texture;
+    sf::Clock ammoRespawnClock;
+    sf::Clock unlimitedAmmoClock;
+    bool unlimitedAmmo = false;
     sf::Text ammoText;
     Button backButton;
     Button playAgainButton;
     Button exitButton;
     bool timeRecorded;
     float survivalTime;
-    int roundCounter; // moved from static inside checkBulletCollisions
+    int roundCounter;
     int licz;
     sf::Clock medkitRespawnClock;
     sf::Clock syringeRespawnClock;
-
     sf::Text roundText;
     sf::Clock roundTextClock;
     bool showingRoundText;
@@ -111,85 +111,41 @@ private:
         sf::Vector2f heroPosition = hero.getPosition();
         return std::abs(position.x - heroPosition.x) >= distance && std::abs(position.y - heroPosition.y) >= distance;
     }
-
-
-
-
-    void checkHeroSyringeCollisions() {
-        for (auto it = syringes.begin(); it != syringes.end();) {
-            if (checkCollision(hero, *it)) {
-                invulnerable = true;
-                syringeClock.restart(); // Restartujemy zegar przy każdej kolizji
-                move_speed *= 2; // Podwajamy prędkość bohatera
-                it = syringes.erase(it); // Usuwamy zebrany element
-            } else {
-                ++it;
+    void showEndGameMenu(bool playerWon, float survivalTime, int killCount) {
+        endGameMenu.showEndGameMenu(playerWon, survivalTime, killCount, window, gameStarted, gameEnded, survivalMode, gameMusic, survivalClock, menu, [this]() { resetGame(); }, [this](int round) { startRound(round); });
+    }
+    void exitWithError(const std::string& errorMessage) {
+        std::cout << errorMessage << std::endl;
+        exit(1);
+    }
+    void loadResources() {
+        std::vector<std::pair<std::string, sf::Texture*>> textures = {
+            {"boss.png", &boss_texture},
+            {"food.png", &syringe_texture},
+            {"enemy2.png", &ninja_texture},
+            {"ammoP.png", &ammo_texture},
+            {"apteczka.png", &medkit_texture},
+            {"Slimeball.png", &slimeProjectileTexture},
+            {"fireball.png", &fireballtexture},
+            {"puste.png", &background_texture},
+            {"Walk.png", &character_texture},
+            {"Walk_Zombie.png", &zombie_texture},
+            {"Slime.png", &slime_texture},
+            {"bullet.png", &bullet_texture}
+        };
+        for (const auto& [file, texture] : textures) {
+            if (!texture->loadFromFile(file)) {
+                exitWithError("Nie udało się wczytać tekstury: " + file);
             }
         }
-    }
-
-
-    void loadResources() {
-        if (!boss_texture.loadFromFile("boss.png")) {
-            std::cout << "Nie udało się wczytać tekstury bossa" << std::endl;
-            exit(1);
-        }
-        if (!syringe_texture.loadFromFile("food.png")) {
-            std::cout << "Nie udało się wczytać tekstury food" << std::endl;
-            exit(1);
-        }
-
-
-        if (!ninja_texture.loadFromFile("enemy2.png")){
-            cout<< "Nie udało się wczytać tekstur Ninjy" <<endl;
-            exit(1);
-        }
-        if (!ammo_texture.loadFromFile("ammoP.png")) { // Load the texture for ammo packs
-            std::cout << "Nie udało się wczytać tekstury amunicji" << std::endl;
-            exit(1);
-        }
-        if (!medkit_texture.loadFromFile("apteczka.png")) {
-            std::cout << "Nie udało się wczytać tekstury apteczki" << std::endl;
-            exit(1);
-        }
-        if (!slimeProjectileTexture.loadFromFile("Slimeball.png")) {
-            std::cout << "Nie udało się wczytać tekstury pocisku slime" << std::endl;
-            exit(1);
-        }
-        if (!fireballtexture.loadFromFile("fireball.png")) {
-            std::cout << "Nie udało się wczytać tekstury pocisku fireball" << std::endl;
-            exit(1);
-        }
-
-        if (!background_texture.loadFromFile("puste.png")) {
-            cout << "Nie udało się wczytać tekstury tła" << endl;
-            exit(1);
-        }
-        if (!character_texture.loadFromFile("Walk.png")) {
-            cout << "Nie udało się wczytać tekstury bohatera" << endl;
-            exit(1);
-        }
-        if (!zombie_texture.loadFromFile("Walk_Zombie.png")) {
-            cout << "Nie udało się wczytać tekstury zombie" << endl;
-            exit(1);
-        }
-        if (!slime_texture.loadFromFile("Slime.png")) {
-            cout << "Nie udało się wczytać tekstury slime" << endl;
-            exit(1);
-        }
         if (!buffer.loadFromFile("menu_music.wav")) {
-            std::cout << "Nie udało się wczytać dźwięku menu" << std::endl;
+            exitWithError("Nie udało się wczytać dźwięku menu");
         }
-        if (!bullet_texture.loadFromFile("bullet.png")) {
-            std::cout << "Nie udało się wczytać tekstury pocisku" << std::endl;
-            exit(1);
+        if (!gameMusic.openFromFile("A Little R & R.ogg")) {
+            exitWithError("Nie udało się wczytać muzyki");
         }
         sound.setBuffer(buffer);
         sound.setLoop(true);
-        if (!gameMusic.openFromFile("blanka.wav")) {
-            std::cout << "Nie udało się wczytać muzyki" << std::endl;
-            exit(1);
-        }
         background_sprite.setTexture(background_texture);
     }
 
@@ -199,326 +155,6 @@ private:
 
     void stopSound() {
         sound.stop();
-    }
-
-
-
-    void showEndGameMenu(bool playerWon, float survivalTime, int killCount) {
-        if (playerWon) {
-            endGameMenu.setEndMessage("Congratulations");
-        } else {
-            endGameMenu.setEndMessage("Game Over");
-        }
-        endGameMenu.updateStats(survivalTime, killCount);
-        endGameMenu.playSound();
-        endGameMenu.playMusic();  // Dodanie odtwarzania muzyki
-
-        while (window.isOpen()) {
-            sf::Event event;
-            while (window.pollEvent(event)) {
-                if (event.type == sf::Event::Closed) {
-                    window.close();
-                }
-                if (event.type == sf::Event::KeyPressed) {
-                    if (event.key.code == sf::Keyboard::Up) {
-                        endGameMenu.moveSelectionUp();
-                    } else if (event.key.code == sf::Keyboard::Down) {
-                        endGameMenu.moveSelectionDown();
-                    } else if (event.key.code == sf::Keyboard::Enter) {
-                        if (endGameMenu.isBackToMenuSelected()) {
-                            // Handle going back to the menu
-                            gameEnded = false;
-                            gameStarted = false;
-                            menu.playSound();
-                            resetGame(); // Reset the game state
-                            endGameMenu.stopMusic();  // Zatrzymanie muzyki końcowej
-                            return;
-                        } else if (endGameMenu.isMouseOverButton(endGameMenu.playAgainButton, sf::Mouse::getPosition(window))) {
-                            // Handle playing again
-                            resetGame(); // Reset the game state
-                            gameStarted = true;
-                            gameMusic.setLoop(true);
-                            gameMusic.play();
-                            endGameMenu.stopMusic();  // Zatrzymanie muzyki końcowej
-                            if (survivalMode) {
-                                // Restart survival mode
-                                survivalMode = true;
-                                survivalClock.restart();
-                            } else {
-                                // Restart stage mode
-                                survivalMode = false; // Ensure we start in stage mode
-                                startRound(1); // Start the first round
-                            }
-                            return;
-                        } else if (endGameMenu.isMouseOverButton(endGameMenu.exitButton, sf::Mouse::getPosition(window))) {
-                            window.close(); // Exit the game
-                        }
-                    }
-                } else if (event.type == sf::Event::MouseButtonPressed) {
-                    if (event.mouseButton.button == sf::Mouse::Left) {
-                        sf::Vector2i mousePos = sf::Mouse::getPosition(window);
-                        if (endGameMenu.isMouseOverButton(endGameMenu.backToMenuButton, mousePos)) {
-                            // Handle going back to the menu
-                            gameEnded = false;
-                            gameStarted = false;
-                            menu.playSound();
-                            resetGame(); // Reset the game state
-                            endGameMenu.stopMusic();  // Zatrzymanie muzyki końcowej
-                            return;
-                        } else if (endGameMenu.isMouseOverButton(endGameMenu.playAgainButton, mousePos)) {
-                            // Handle playing again
-                            resetGame(); // Reset the game state
-                            gameStarted = true;
-                            gameMusic.setLoop(true);
-                            gameMusic.play();
-                            endGameMenu.stopMusic();  // Zatrzymanie muzyki końcowej
-                            if (survivalMode) {
-                                // Restart survival mode
-                                survivalMode = true;
-                                survivalClock.restart();
-                            } else {
-                                // Restart stage mode
-                                survivalMode = false; // Ensure we start in stage mode
-                                startRound(1); // Start the first round
-                            }
-                            return;
-                        } else if (endGameMenu.isMouseOverButton(endGameMenu.exitButton, mousePos)) {
-                            window.close(); // Exit the game
-                        }
-                    }
-                }
-            }
-
-            sf::Vector2i mousePosition = sf::Mouse::getPosition(window);
-            endGameMenu.update(mousePosition);
-
-            window.clear();
-            endGameMenu.draw(window);
-            window.display();
-        }
-
-        endGameMenu.stopSound();
-    }
-
-
-
-
-
-
-
-
-
-    void checkHeroMedkitCollisions() {
-        for (auto it = medkits.begin(); it != medkits.end();) {
-            if (checkCollision(hero, *it)) {
-                health = std::min(100.0f, health + it->getHealingAmount());
-                updateHealthText();
-                it = medkits.erase(it); // Usunięcie zebranej apteczki
-            } else {
-                ++it;
-            }
-        }
-    }
-
-
-
-    void addNinjaAnimationFrames(Ninja& ninja) {
-        std::vector<IntRect> frames = {
-            IntRect(6, 100, 17, 26),
-            IntRect(39, 100, 17, 26),
-            IntRect(71, 100, 17, 26),
-            IntRect(103, 100, 17, 26),
-            IntRect(134, 100, 17, 26),
-            IntRect(167, 100, 17, 26),
-            IntRect(199, 100, 17, 26),
-            IntRect(231, 100, 17, 26)
-        };
-
-        for (const auto& frame : frames) {
-            ninja.add_animation_frame_right(frame);
-        }
-    }
-    void addSlimeAnimationFrames(Slime& slime) {
-        std::vector<IntRect> frames = {
-            IntRect(3, 4, 38, 26),
-            IntRect(46, 5, 38, 26),
-            IntRect(88, 5, 38, 26),
-            IntRect(133, 5, 38, 26),
-            IntRect(178, 5, 38, 26),
-            IntRect(223, 5, 38, 26),
-            IntRect(268, 2, 38, 26),
-            IntRect(313, 1, 38, 26),
-            IntRect(356, 1, 38, 26),
-            IntRect(400, 2, 38, 26)
-        };
-
-        for (const auto& frame : frames) {
-            slime.add_animation_frame_right(frame);
-        }
-    }
-
-    void addZombieAnimationFrames(Zombie& zombie) {
-        std::vector<IntRect> frames = {
-            IntRect(11, 69, 14, 26),
-            IntRect(42, 69, 14, 26),
-            IntRect(74, 69, 14, 26),
-            IntRect(107, 69, 14, 26),
-            IntRect(140, 69, 14, 26),
-            IntRect(173, 69, 14, 26),
-            IntRect(204, 69, 14, 26),
-            IntRect(231, 100, 17, 26),
-            IntRect(269, 69, 14, 26),
-            IntRect(300, 69, 14, 26)
-        };
-
-        for (const auto& frame : frames) {
-            zombie.add_animation_frame_right(frame);
-        }
-    }
-    void addBossAnimationFrames(Boss& boss) {
-        std::vector<sf::IntRect> frames = {
-            sf::IntRect(108, 219, 64, 139),
-            sf::IntRect(397, 221, 64, 139),
-            sf::IntRect(685, 219, 64, 139),
-            sf::IntRect(973, 220, 64, 139),
-            sf::IntRect(1260, 220, 64, 139),
-            sf::IntRect(1549, 220, 64, 139),
-            sf::IntRect(1834, 220, 64, 139),
-            sf::IntRect(2122, 220, 64, 139),
-            sf::IntRect(2410, 220, 64, 139),
-            sf::IntRect(2700, 220, 64, 139),
-            sf::IntRect(2989, 220, 64, 139),
-            sf::IntRect(3276, 220, 64, 139)
-        };
-
-        for (const auto& frame : frames) {
-            boss.add_animation_frame_right(frame);
-        }
-        std::vector<sf::IntRect> deathFrames = {
-            sf::IntRect(105, 660, 150, 150),
-            sf::IntRect(394, 660, 150, 150),
-            sf::IntRect(687, 660, 150, 150),
-            sf::IntRect(971, 660, 150, 150),
-            sf::IntRect(1258, 660, 150, 150),
-            sf::IntRect(1557, 660, 150, 150),
-            sf::IntRect(1830, 660, 150, 150),
-            sf::IntRect(2115, 660, 150, 150),
-            sf::IntRect(2404, 660, 150, 150),
-            sf::IntRect(2692, 660, 150, 150),
-            sf::IntRect(2980, 660, 150, 150),
-            sf::IntRect(3267, 660, 150, 150),
-            sf::IntRect(3559, 660, 150, 150),
-            sf::IntRect(3847, 660, 150, 150),
-            sf::IntRect(4140, 660, 150, 150),
-            sf::IntRect(4431, 660, 150, 150),
-            sf::IntRect(4716, 660, 150, 150),
-            sf::IntRect(5005, 660, 150, 150),
-            sf::IntRect(5295, 660, 150, 150),
-            sf::IntRect(5579, 660, 150, 150),
-            sf::IntRect(5868, 660, 150, 150),
-
-
-            // other death frames...
-        };
-        for (const auto& frame : deathFrames) {
-            boss.add_death_animation_frame(frame);
-        }
-    }
-
-    void createBoss() {
-        const int margin = 150;
-        int maxX = window.getSize().x - margin;
-        int maxY = window.getSize().y - margin;
-        int minX = margin;
-        int minY = margin;
-
-        sf::Vector2f newPosition;
-        do {
-            int posX = rand() % (maxX - minX + 1) + minX;
-            int posY = rand() % (maxY - minY + 1) + minY;
-            newPosition = sf::Vector2f(static_cast<float>(posX), static_cast<float>(posY));
-        } while (!isFarEnough(newPosition, 150.0f));
-
-        Boss boss(5);
-        boss.setTexture(boss_texture);
-        addBossAnimationFrames(boss);
-        boss.setTextureRect(sf::IntRect(108, 219, 64, 100)); // Set initial frame
-        boss.setScale(3, 3);
-        boss.setPosition(newPosition);
-        boss.step();
-        bosses.push_back(boss);
-    }
-
-
-    void createNinja() {
-        const int margin = 50;
-        int maxX = window.getSize().x - margin;
-        int maxY = window.getSize().y - margin;
-        int minX = margin;
-        int minY = margin;
-
-        sf::Vector2f newPosition;
-        do {
-            int posX = rand() % (maxX - minX + 1) + minX;
-            int posY = rand() % (maxY - minY + 1) + minY;
-            newPosition = sf::Vector2f(static_cast<float>(posX), static_cast<float>(posY));
-        } while (!isFarEnough(newPosition, 75.0f));
-
-        Ninja ninja(3);
-        ninja.setTexture(ninja_texture);
-        addNinjaAnimationFrames(ninja);
-        ninja.setTextureRect(sf::IntRect(6, 100, 17, 26));
-        ninja.setScale(1, 1);
-        ninja.setPosition(newPosition);
-        ninja.step();
-        ninjas.push_back(ninja);
-    }
-    void createZombie() {
-        const int margin = 50;
-        int maxX = window.getSize().x - margin;
-        int maxY = window.getSize().y - margin;
-        int minX = margin;
-        int minY = margin;
-
-        sf::Vector2f newPosition;
-        do {
-            int posX = rand() % (maxX - minX + 1) + minX;
-            int posY = rand() % (maxY - minY + 1) + minY;
-            newPosition = sf::Vector2f(static_cast<float>(posX), static_cast<float>(posY));
-        } while (!isFarEnough(newPosition, 75.0f));
-
-        Zombie zombie(5);
-        zombie.setTexture(zombie_texture);
-        addZombieAnimationFrames(zombie);
-        zombie.setTextureRect(sf::IntRect(11, 69, 14, 26));
-        zombie.setScale(2, 2);
-        zombie.setPosition(newPosition);
-        zombie.step();
-        zombies.push_back(zombie);
-    }
-
-    void createSlime() {
-        const int margin = 50;
-        int maxX = window.getSize().x - margin;
-        int maxY = window.getSize().y - margin;
-        int minX = margin;
-        int minY = margin;
-
-        sf::Vector2f newPosition;
-        do {
-            int posX = rand() % (maxX - minX + 1) + minX;
-            int posY = rand() % (maxY - minY + 1) + minY;
-            newPosition = sf::Vector2f(static_cast<float>(posX), static_cast<float>(posY));
-        } while (!isFarEnough(newPosition, 75.0f));
-
-        Slime slime(5);
-        slime.setTexture(slime_texture);
-        addSlimeAnimationFrames(slime);
-        slime.setTextureRect(sf::IntRect(3, 4, 38, 26)); // Set initial frame
-        slime.setScale(2, 2);
-        slime.setPosition(newPosition);
-        slime.step();
-        slimes.push_back(slime);
     }
 public:
     Game()
@@ -546,12 +182,6 @@ public:
 
         loadResources();
         hero.initializeHero(character_texture);
-        // createZombie();
-        // createNinja();
-        // createSlime();
-
-
-
         background_sprite.setTexture(background_texture);
 
         if (!font.loadFromFile("arial.ttf")) {
@@ -602,68 +232,6 @@ public:
         healthText.setString("HP: " + ss.str());
     }
 
-
-    void checkHeroZombieCollisions() {
-        for (auto& zombie : zombies) {
-            if (checkCollision(hero, zombie)) {
-                if (!invulnerable) {
-                    health -= damage;
-                    updateHealthText();
-                    if (health <= 0.0) {
-                        gameEnded = true;
-                        gameMusic.stop();
-                    }
-                }
-            }
-        }
-    }
-
-    void checkHeroNinjaCollisions() {
-        for (auto& ninja : ninjas) {
-            if (checkCollision(hero, ninja)) {
-                if (!invulnerable) {
-                    health -= damage * 5;
-                    updateHealthText();
-                    if (health <= 0.0) {
-                        gameEnded = true;
-                        gameMusic.stop();
-                    }
-                }
-            }
-        }
-    }
-
-    void checkHeroSlimeCollisions() {
-        for (auto& slime : slimes) {
-            if (checkCollision(hero, slime)) {
-                if (!invulnerable) {
-                    health -= damage * 10;
-                    updateHealthText();
-                    if (health <= 0.0) {
-                        gameEnded = true;
-                        gameMusic.stop();
-                    }
-                }
-            }
-        }
-    }
-
-    void checkHeroBossCollisions() {
-        for (auto& boss : bosses) {
-            if (checkCollision(hero, boss)) {
-                if (!invulnerable) {
-                    health -= damage * 10;
-                    updateHealthText();
-                    if (health <= 0.0) {
-                        gameEnded = true;
-                        gameMusic.stop();
-                    }
-                }
-            }
-        }
-    }
-
-
     void run() {
         menu.playSound();
         while (window.isOpen()) {
@@ -676,7 +244,6 @@ public:
         gameMusic.stop();
     }
     void resetGame() {
-        // Reset game state variables
         health = 100;
         updateHealthText();
         ammo = 30;
@@ -691,16 +258,12 @@ public:
         ammoPacks.clear();
         Fireball.clear();
         slimeProjectiles.clear();
-
-
-        // Reset kills and time
+        syringes.clear();
         zombiesKilled = 0;
         Ninja_killed = 0;
         Slime_killed = 0;
         updateKillCounterText();
         updateAmmoText();
-
-        // Reset flags
         gameEnded = false;
         timeRecorded = false;
         survivalTime = 0.0f;
@@ -708,28 +271,20 @@ public:
         MedkitClock.restart();
         medkitRespawnClock.restart();
         ammoRespawnClock.restart();
-        // Reset round counter
         roundCounter = 0;
         licz = 0;
-
-        // Reset round text state
         showingRoundText = false;
         roundStarted = false;
         roundText.setString("");
-
-        // Add initial entities again if needed
         if (gameStarted && !survivalMode) {
-            startRound(1); // Start the first round
+            startRound(1);
         }
     }
-
-
     void startRound(int round) {
         roundCounter = round;
         showingRoundText = true;
         roundStarted = false;
         roundTextClock.restart();
-
         std::string roundString;
         if (round == 1) {
             roundString = "Round 1";
@@ -743,43 +298,72 @@ public:
         roundText.setString(roundString);
         roundText.setPosition(window_width / 2 - roundText.getGlobalBounds().width / 2,
                               window_height / 2 - roundText.getGlobalBounds().height / 2);
-
-        // Clear any existing enemies
         zombies.clear();
         ninjas.clear();
         slimes.clear();
         bosses.clear();
 
-        // Initialize enemies based on the round
-
     }
-
-
     void shootBullet() {
         if ((ammo > 0 || unlimitedAmmo) && !reloading) {
-            sf::Vector2f heroCenter = hero.getPosition() + sf::Vector2f(hero.getGlobalBounds().width / 2, hero.getGlobalBounds().height / 2);
-            sf::Vector2i mousePosition = sf::Mouse::getPosition(window);
-            sf::Vector2f target = window.mapPixelToCoords(mousePosition);
-            sf::Vector2f direction = normalize(target - heroCenter);
-            float angle = std::atan2(direction.y, direction.x) * 180 / 3.14159265;
-            Bullet bullet(bullet_texture, direction, bullet_speed, angle);
-            bullet.setPosition(heroCenter);
-            bullets.push_back(bullet);
-            if (!unlimitedAmmo) {
-                ammo--;
-                updateAmmoText();
+            if (unlimitedAmmo || shootClock.getElapsedTime().asSeconds() >= 0.5f) { // Check if unlimited ammo or 0.5 seconds have passed since the last shot
+                sf::Vector2f heroCenter = hero.getPosition() + sf::Vector2f(hero.getGlobalBounds().width / 2, hero.getGlobalBounds().height / 2);
+                sf::Vector2i mousePosition = sf::Mouse::getPosition(window);
+                sf::Vector2f target = window.mapPixelToCoords(mousePosition);
+                sf::Vector2f direction = normalize(target - heroCenter);
+
+                std::vector<Bullet> newBullets;
+                if (tripleShotActive) {
+                    // Create three bullets
+                    newBullets.push_back(Bullet(bullet_texture, direction, bullet_speed, std::atan2(direction.y, direction.x) * 180 / 3.14159265));
+
+                    // Calculate the left and right directions
+                    float angleLeft = std::atan2(direction.y, direction.x) - 30 * 3.14159265 / 180;
+                    float angleRight = std::atan2(direction.y, direction.x) + 30 * 3.14159265 / 180;
+
+                    sf::Vector2f directionLeft(std::cos(angleLeft), std::sin(angleLeft));
+                    sf::Vector2f directionRight(std::cos(angleRight), std::sin(angleRight));
+
+                    newBullets.push_back(Bullet(bullet_texture, directionLeft, bullet_speed, angleLeft * 180 / 3.14159265));
+                    newBullets.push_back(Bullet(bullet_texture, directionRight, bullet_speed, angleRight * 180 / 3.14159265));
+                } else {
+                    newBullets.push_back(Bullet(bullet_texture, direction, bullet_speed, std::atan2(direction.y, direction.x) * 180 / 3.14159265));
+                }
+
+                for (auto& bullet : newBullets) {
+                    bullet.setPosition(heroCenter);
+                    bullets.push_back(bullet);
+                }
+
+                if (!unlimitedAmmo) {
+                    ammo--;
+                    updateAmmoText();
+                }
+                shootClock.restart(); // Reset the shoot clock after firing a bullet if not unlimited ammo
             }
         }
     }
 
-    void reload() {
-        if (!reloading && !unlimitedAmmo) {
-            reloading = true;
-            reloadClock.restart();
-            ammoText.setString("Reloading...");
-        }
-    }
 
+
+    void startGame(bool survival) {
+        gameStarted = true;
+        gameEnded = false;
+        reloading = false;
+        unlimitedAmmo = false;
+        invulnerable = false;
+        survivalMode = survival;
+        survivalClock.restart();
+        reloadClock.restart();
+        unlimitedAmmoClock.restart();
+        syringeClock.restart();
+        medkitRespawnClock.restart();
+        syringeRespawnClock.restart();
+        ammoRespawnClock.restart();
+        // Additional reset logic if necessary
+        gameMusic.setLoop(true);
+        gameMusic.play();
+    }
     void updateAmmoText() {
         std::stringstream ss;
         if (unlimitedAmmo) {
@@ -789,6 +373,17 @@ public:
         }
         ammoText.setString(ss.str());
     }
+
+
+    void reload() {
+        if (!reloading && !unlimitedAmmo) {
+            reloading = true;
+            reloadClock.restart();
+            ammoText.setString("Reloading...");
+        }
+    }
+
+
 
     void checkBulletCollisions() {
         for (auto bulletIt = bullets.begin(); bulletIt != bullets.end();) {
@@ -872,7 +467,12 @@ public:
             }
         }
 
-        // Check if all bosses are dead or dying or within the post-death delay
+        // Remove bosses that should be removed
+        bosses.erase(std::remove_if(bosses.begin(), bosses.end(),
+                                    [](const Boss& boss) { return boss.shouldBeRemoved(); }),
+                     bosses.end());
+
+        Vector2f playerPosition = hero.getPosition();
         bool allBossesDeadOrInPostDeathDelay = std::all_of(bosses.begin(), bosses.end(), [](const Boss& boss) {
             return boss.isDying() || boss.isDead() || !boss.canSpawnNewEnemies();
         });
@@ -882,13 +482,13 @@ public:
                 roundCounter++;
                 if (roundCounter % 3 != 0) {
                     for (int i = 0; i < roundCounter; i++) {
-                        createZombie();
-                        createNinja();
-                        createSlime();
+                        Zombie::createZombie(zombies, zombie_texture, window);
+                        Ninja::createNinja(ninjas, ninja_texture, window, playerPosition);
+                        Slime::createSlime(slimes, slime_texture, window, playerPosition);
                     }
                 }
                 if (roundCounter % 3 == 0) {
-                    createBoss();
+                    Boss::createBoss(bosses, boss_texture, window);
                     licz++;
                 }
             }
@@ -943,20 +543,12 @@ public:
                     if (!gameStarted && !gameEnded) {
                         if (menu.isMouseOverButton(menu.survivalButton, mousePos)) {
                             gameStarted = true;
-                            survivalMode = true;
+                            startGame(true);
                             menu.stopSound();
-                            survivalClock.restart();
-                            MedkitClock.restart();
-                            gameMusic.setLoop(true);
-                            gameMusic.play();
                         } else if (menu.isMouseOverButton(menu.stageButton, mousePos)) {
                             gameStarted = true;
-                            survivalMode = false;
+                            startGame(false);
                             menu.stopSound();
-                            survivalClock.restart();
-                            MedkitClock.restart();
-                            gameMusic.setLoop(true);
-                            gameMusic.play();
                             startRound(1); // Start the first round
                         }
                     } else if (gameEnded) {
@@ -967,9 +559,7 @@ public:
                             resetGame(); // Reset the game state
                         } else if (endGameMenu.isMouseOverButton(endGameMenu.playAgainButton, mousePos)) {
                             resetGame(); // Reset the game state
-                            gameStarted = true;
-                            gameMusic.setLoop(true);
-                            gameMusic.play();
+                            startGame(survivalMode);
                         } else if (endGameMenu.isMouseOverButton(endGameMenu.exitButton, mousePos)) {
                             window.close();
                         }
@@ -978,6 +568,7 @@ public:
             }
         }
     }
+
 
     void updateButtonColors(const sf::Vector2i& mousePos) {
         if (menu.isMouseOverButton(menu.survivalButton, mousePos)) {
@@ -995,7 +586,6 @@ public:
 
     void update() {
         if (gameStarted && !gameEnded) {
-            // Reloading logic
             if (reloading) {
                 if (reloadClock.getElapsedTime().asSeconds() >= 3.0f) {
                     ammo = 30;
@@ -1003,8 +593,9 @@ public:
                     updateAmmoText();
                 }
             }
-
-            // Unlimited ammo logic
+            if (tripleShotActive && tripleShotClock.getElapsedTime().asSeconds() >= 5.0f) {
+                tripleShotActive = false;
+            }
             if (unlimitedAmmo) {
                 if (unlimitedAmmoClock.getElapsedTime().asSeconds() >= 5.0f) {
                     unlimitedAmmo = false;
@@ -1018,29 +609,29 @@ public:
                 }
             }
 
-            checkHeroSyringeCollisions();
+            Syringe::checkHeroSyringeCollisions(syringes, hero, syringeClock, move_speed, orgmove_speed, invulnerable);
 
             if (invulnerable) {
                 if (syringeClock.getElapsedTime().asSeconds() >= 5.0f) {
-                    move_speed /= 2; // Reset movement speed
+                    move_speed = orgmove_speed; // Reset movement speed
                     invulnerable = false; // End invulnerability
                 }
             }
-            if (syringeRespawnClock.getElapsedTime().asSeconds() >= 15.0f) {
-                Syringe::spawnSyringe(syringes,syringe_texture,window,syringeRespawnClock,hero,75.0f);
-                syringeRespawnClock.restart();
+            if (gameStarted) {
+                if (syringeRespawnClock.getElapsedTime().asSeconds() >= 20.0f) {
+                    Syringe::spawnSyringe(syringes, syringe_texture, window, syringeRespawnClock, hero, 75.0f);
+                    syringeRespawnClock.restart();
+                }
+                if (medkitRespawnClock.getElapsedTime().asSeconds() >= 10.0f) {
+                    Medkit::createMedkit(medkits, medkit_texture, window, hero, 75.0f);
+                    medkitRespawnClock.restart();
+                }
             }
 
-            // Medkit respawn logic
-            if (medkitRespawnClock.getElapsedTime().asSeconds() >= 15.0f) {
-                Medkit::createMedkit(medkits, medkit_texture, window, hero, 75.0f);
-                medkitRespawnClock.restart();
-            }
-
-            // Existing update logic...
             FloatRect bounds(0, 0, window_width, window_height);
-            checkHeroMedkitCollisions();
-            Ammo::checkHeroAmmoCollisions(ammoPacks, hero, unlimitedAmmo, unlimitedAmmoClock, reloading, [this](){ updateAmmoText(); });
+            Medkit::checkHeroMedkitCollisions(medkits, hero, health, [this]() { updateHealthText(); });
+            Ammo::checkHeroAmmoCollisions(ammoPacks, hero, unlimitedAmmo, unlimitedAmmoClock, reloading, [this]() { updateAmmoText(); }, tripleShotActive, tripleShotClock);
+
 
             if (Keyboard::isKeyPressed(Keyboard::A)) {
                 hero.moveWithCollision(bounds, -move_speed, 0);
@@ -1063,7 +654,7 @@ public:
                 projectile.update();
                 if (checkCollision(hero, projectile)) {
                     if (!invulnerable) {
-                        health -= damage * 500;
+                        health -= damage * 50000;
                         updateHealthText();
                         projectile = slimeProjectiles.back();
                         slimeProjectiles.pop_back();
@@ -1077,7 +668,6 @@ public:
                     }
                 }
             }
-
             slimeProjectiles.erase(std::remove_if(slimeProjectiles.begin(), slimeProjectiles.end(),
                                                   [&bounds](const SlimeProjectile& p) {
                                                       return !bounds.intersects(p.getGlobalBounds());
@@ -1112,53 +702,87 @@ public:
                                               return !bounds.intersects(p.getGlobalBounds());
                                           }), Fireball.end());
 
+            // Update positions and resolve collisions for all zombies
             for (auto& zombie : zombies) {
                 Vector2f zombiePosition = zombie.getPosition();
                 Vector2f direction = playerPosition - zombiePosition;
                 direction = normalize(direction);
 
-                float moveX = direction.x * move_speed * 0.2;
-                float moveY = direction.y * move_speed * 0.2;
+                float moveX = direction.x * 0.02;
+                float moveY = direction.y * 0.02;
                 zombie.moveWithCollision(bounds, moveX, moveY);
                 zombie.step();
+
+                // Resolve collisions with other zombies
+                for (auto& otherZombie : zombies) {
+                    if (&zombie != &otherZombie && checkCollision(zombie, otherZombie)) {
+                        resolveCollision(zombie, otherZombie);
+                    }
+                }
             }
 
+            // Update positions and resolve collisions for all ninjas
             for (auto& ninja : ninjas) {
                 Vector2f ninjaPosition = ninja.getPosition();
                 Vector2f direction = playerPosition - ninjaPosition;
                 direction = normalize(direction);
 
-                float moveX = direction.x * move_speed * 0.5;
-                float moveY = direction.y * move_speed * 0.5;
+                float moveX = direction.x * 0.05;
+                float moveY = direction.y * 0.05;
                 ninja.moveWithCollision(bounds, moveX, moveY);
-                ninja.step();
+                ninja.step(playerPosition, bounds); // Pass arguments
+
+                // Update clones for each ninja
+
+                // Resolve collisions with other ninjas
+                for (auto& otherNinja : ninjas) {
+                    if (&ninja != &otherNinja && checkCollision(ninja, otherNinja)) {
+                        resolveCollision(ninja, otherNinja);
+                    }
+                }
             }
 
+            // Update positions and resolve collisions for all slimes
             for (auto& slime : slimes) {
                 Vector2f slimePosition = slime.getPosition();
                 Vector2f direction = playerPosition - slimePosition;
                 direction = normalize(direction);
 
-                float moveX = direction.x * move_speed * 0.05;
-                float moveY = direction.y * move_speed * 0.05;
+                float moveX = direction.x * 0.005;
+                float moveY = direction.y * 0.005;
                 slime.moveWithCollision(bounds, moveX, moveY);
                 slime.step();
+
+                // Resolve collisions with other slimes
+                for (auto& otherSlime : slimes) {
+                    if (&slime != &otherSlime && checkCollision(slime, otherSlime)) {
+                        resolveCollision(slime, otherSlime);
+                    }
+                }
             }
 
+            // Update positions and resolve collisions for all bosses
             for (auto& boss : bosses) {
                 Vector2f bossPosition = boss.getPosition();
                 Vector2f direction = playerPosition - bossPosition;
                 direction = normalize(direction);
 
-                float moveX = direction.x * move_speed * 0.1;
-                float moveY = direction.y * move_speed * 0.1;
+                float moveX = direction.x * 0.01;
+                float moveY = direction.y * 0.01;
                 boss.moveWithCollision(bounds, moveX, moveY);
+
+                // Resolve collisions with other bosses
+                for (auto& otherBoss : bosses) {
+                    if (&boss != &otherBoss && checkCollision(boss, otherBoss)) {
+                        resolveCollision(boss, otherBoss);
+                    }
+                }
             }
 
-            checkHeroZombieCollisions();
-            checkHeroNinjaCollisions();
-            checkHeroSlimeCollisions();
-            checkHeroBossCollisions();
+            Zombie::checkHeroZombieCollisions(zombies, hero, health, invulnerable, damage, gameEnded, gameMusic, [this]() { updateHealthText(); });
+            Ninja::checkHeroNinjaCollisions(ninjas, hero, health, invulnerable, damage, gameEnded, gameMusic, [this]() { updateHealthText(); });
+            Slime::checkHeroSlimeCollisions(slimes, hero, health, invulnerable, damage, gameEnded, gameMusic, [this]() { updateHealthText(); });
+            Boss::checkHeroBossCollisions(bosses, hero, health, invulnerable, damage, gameEnded, gameMusic, [this]() { updateHealthText(); });
 
             if (survivalMode) {
                 Time elapsed = survivalClock.getElapsedTime();
@@ -1178,36 +802,36 @@ public:
                 roundStarted = true;
                 if (roundCounter == 1) {
                     for (int i = 0; i < 10; ++i) {
-                        createZombie();
+                        Zombie::createZombie(zombies, zombie_texture, window);
                     }
                 } else if (roundCounter == 2) {
                     for (int i = 0; i < 10; ++i) {
-                        createZombie();
+                        Zombie::createZombie(zombies, zombie_texture, window);
                     }
                     for (int i = 0; i < 5; ++i) {
-                        createNinja();
+                        Ninja::createNinja(ninjas, ninja_texture, window, playerPosition);
                     }
                 } else if (roundCounter == 3) {
                     for (int i = 0; i < 5; ++i) {
-                        createZombie();
+                        Zombie::createZombie(zombies, zombie_texture, window);
                     }
                     for (int i = 0; i < 5; ++i) {
-                        createNinja();
+                        Ninja::createNinja(ninjas, ninja_texture, window, playerPosition);
                     }
                     for (int i = 0; i < 5; ++i) {
-                        createSlime();
+                        Slime::createSlime(slimes, slime_texture, window, playerPosition);
                     }
                 } else if (roundCounter == 4) {
-                    createBoss();
+                    Boss::createBoss(bosses, boss_texture, window);
+                    for (int i = 0; i < 2; ++i) {
+                        Slime::createSlime(slimes, slime_texture, window, playerPosition);
+                    }
                 }
             }
 
-            // Check if any boss is dying
             bool anyBossDyingOrInPostDeathDelay = std::any_of(bosses.begin(), bosses.end(), [](const Boss& boss) {
                 return boss.isDying() || !boss.canSpawnNewEnemies();
             });
-
-            // Spawn new enemies only if no boss is in the dying state or post-death delay
             if (!anyBossDyingOrInPostDeathDelay) {
                 if (roundStarted) {
                     bool allZombiesKilled = std::all_of(zombies.begin(), zombies.end(), [](const Zombie& z){ return z.getHealth() <= 0.0; });
@@ -1246,12 +870,13 @@ public:
     }
 
 
-
-
-
     void render() {
         window.clear();
         if (gameStarted) {
+            // Draw game elements...
+
+            sf::FloatRect windowBounds(0, 0, window_width, window_height); // Declare windowBounds here
+
             for (int x = 0; x < window_width; x += background_texture.getSize().x) {
                 for (int y = 0; y < window_height; y += background_texture.getSize().y) {
                     background_sprite.setPosition(x, y);
@@ -1266,8 +891,14 @@ public:
             for (const auto& medkit : medkits) {
                 window.draw(medkit);
             }
-            for (const auto& ninja : ninjas) {
+            for (auto& ninja : ninjas) {
+                ninja.step(hero.getPosition(), windowBounds); // Pass arguments
                 window.draw(ninja);
+
+                // Draw clones for each ninja
+                for (const auto& clone : ninja.getClones()) {
+                    window.draw(clone);
+                }
             }
             for (const auto& slime : slimes) {
                 window.draw(slime);
@@ -1278,7 +909,6 @@ public:
             for (const auto& syringe : syringes) {
                 window.draw(syringe);
             }
-
             for (const auto& ammo : ammoPacks) {
                 window.draw(ammo);
             }
@@ -1295,7 +925,6 @@ public:
             if (showingRoundText) {
                 window.draw(roundText);
             }
-
             if (survivalMode) {
                 window.draw(timerText);
             }
@@ -1340,6 +969,7 @@ public:
             sprite2.move(0, overlapY / 2);
         }
     }
+
 };
 
 int main() {

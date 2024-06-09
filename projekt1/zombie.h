@@ -2,7 +2,9 @@
 #define ZOMBIE_H
 
 #include <SFML/Graphics.hpp>
+#include <SFML/Audio.hpp> // Include SFML Audio module
 #include <vector>
+#include <functional>
 
 class Zombie : public sf::Sprite {
 public:
@@ -26,6 +28,10 @@ public:
 
     Zombie clone() const;
 
+    void addZombieAnimationFrames();
+    static void createZombie(std::vector<Zombie>& zombies, sf::Texture& zombie_texture, sf::RenderWindow& window);
+    static void checkHeroZombieCollisions(std::vector<Zombie>& zombies, sf::Sprite& hero, float& health, bool invulnerable, float damage, bool& gameEnded, sf::Music& gameMusic, std::function<void()> updateHealthText);
+
 private:
     std::vector<sf::IntRect> framesRight;
     std::vector<sf::IntRect> framesLeft;
@@ -41,6 +47,8 @@ private:
     Direction direction;
     sf::Clock clock;
     sf::Time frameTime;
+
+    static bool isFarEnough(const sf::Vector2f& pos1, const sf::Vector2f& pos2, float minDistance);
 };
 
 #endif // ZOMBIE_H

@@ -14,10 +14,8 @@ EndGameMenu::EndGameMenu() : selectedBackToMenu(true) {
         std::cout << "Nie udało się wczytać dźwięku menu" << std::endl;
     }
 
-    if (!endGameMusic.openFromFile("end_game_music.wav")) {
+    if (!endGameMusic.openFromFile("Fisticuffs and Ale.ogg")) {
         std::cout << "Nie udało się wczytać muzyki końcowej gry" << std::endl;
-    } else {
-        std::cout << "Muzyka końcowa gry została pomyślnie wczytana." << std::endl;
     }
 
     sound.setBuffer(buffer);
@@ -180,4 +178,101 @@ void EndGameMenu::setTimeLabel(const std::string& label) {
     std::string currentText = survivalTimeText.getString();
     std::string newText = label + currentText.substr(currentText.find(":"));
     survivalTimeText.setString(newText);
+}
+
+void EndGameMenu::showEndGameMenu(bool playerWon, float survivalTime, int killCount, sf::RenderWindow& window, bool& gameStarted, bool& gameEnded, bool& survivalMode, sf::Music& gameMusic, sf::Clock& survivalClock, Menu& menu, std::function<void()> resetGame, std::function<void(int)> startRound) {
+    if (playerWon) {
+        setEndMessage("Congratulations");
+    } else {
+        setEndMessage("Game Over");
+    }
+    updateStats(survivalTime, killCount);
+    playSound();
+    playMusic();
+
+    while (window.isOpen()) {
+        sf::Event event;
+        while (window.pollEvent(event)) {
+            if (event.type == sf::Event::Closed) {
+                window.close();
+            }
+            if (event.type == sf::Event::KeyPressed) {
+                if (event.key.code == sf::Keyboard::Up) {
+                    moveSelectionUp();
+                } else if (event.key.code == sf::Keyboard::Down) {
+                    moveSelectionDown();
+                } else if (event.key.code == sf::Keyboard::Enter) {
+                    if (isBackToMenuSelected()) {
+                        // Handle going back to the menu
+                        gameEnded = false;
+                        gameStarted = false;
+                        menu.playSound();
+                        resetGame(); // Reset the game state
+                        stopMusic();  // Stop the end game music
+                        return;
+                    } else if (isMouseOverButton(playAgainButton, sf::Mouse::getPosition(window))) {
+                        // Handle playing again
+                        resetGame(); // Reset the game state
+                        gameStarted = true;
+                        gameMusic.setLoop(true);
+                        gameMusic.play();
+                        stopMusic();  // Stop the end game music
+                        if (survivalMode) {
+                            // Restart survival mode
+                            survivalMode = true;
+                            survivalClock.restart();
+                        } else {
+                            // Restart stage mode
+                            survivalMode = false; // Ensure we start in stage mode
+                            startRound(1); // Start the first round
+                        }
+                        return;
+                    } else if (isMouseOverButton(exitButton, sf::Mouse::getPosition(window))) {
+                        window.close(); // Exit the game
+                    }
+                }
+            } else if (event.type == sf::Event::MouseButtonPressed) {
+                if (event.mouseButton.button == sf::Mouse::Left) {
+                    sf::Vector2i mousePos = sf::Mouse::getPosition(window);
+                    if (isMouseOverButton(backToMenuButton, mousePos)) {
+                        // Handle going back to the menu
+                        gameEnded = false;
+                        gameStarted = false;
+                        menu.playSound();
+                        resetGame(); // Reset the game state
+                        stopMusic();  // Stop the end game music
+                        return;
+                    } else if (isMouseOverButton(playAgainButton, mousePos)) {
+                        // Handle playing again
+                        resetGame(); // Reset the game state
+                        gameStarted = true;
+                        gameMusic.setLoop(true);
+                        gameMusic.play();
+                        stopMusic();  // Stop the end game music
+                        if (survivalMode) {
+                            // Restart survival mode
+                            survivalMode = true;
+                            survivalClock.restart();
+                        } else {
+                            // Restart stage mode
+                            survivalMode = false; // Ensure we start in stage mode
+                            startRound(1); // Start the first round
+                        }
+                        return;
+                    } else if (isMouseOverButton(exitButton, mousePos)) {
+                        window.close(); // Exit the game
+                    }
+                }
+            }
+        }
+
+        sf::Vector2i mousePosition = sf::Mouse::getPosition(window);
+        update(mousePosition);
+
+        window.clear();
+        draw(window);
+        window.display();
+    }
+
+    stopSound();
 }

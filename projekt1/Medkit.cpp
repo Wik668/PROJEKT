@@ -33,3 +33,15 @@ void Medkit::createMedkit(std::vector<Medkit>& medkits, sf::Texture& medkit_text
     medkit.setScale(0.09f, 0.09f); // Scale if needed
     medkits.push_back(medkit);
 }
+
+void Medkit::checkHeroMedkitCollisions(std::vector<Medkit>& medkits, sf::Sprite& hero, float& health, std::function<void()> updateHealthText) {
+    for (auto it = medkits.begin(); it != medkits.end();) {
+        if (hero.getGlobalBounds().intersects(it->getGlobalBounds())) {
+            health = std::min(100.0f, health + it->getHealingAmount());
+            updateHealthText();
+            it = medkits.erase(it); // Remove collected medkit
+        } else {
+            ++it;
+        }
+    }
+}

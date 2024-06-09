@@ -3,6 +3,7 @@
 
 #include <SFML/Graphics.hpp>
 #include <vector>
+#include "AnimatedSprite.h"
 
 class Syringe : public sf::Sprite {
 public:
@@ -10,10 +11,8 @@ public:
 
     float getEffectDuration() const;
 
-    static void initializeSyringes(sf::RenderWindow& window, sf::Texture& syringeTexture, std::vector<Syringe>& syringes);
-    static void createSyringe(float x, float y, sf::Texture& syringeTexture, std::vector<Syringe>& syringes);
-    static void checkHeroSyringeCollisions(sf::Sprite& hero, std::vector<Syringe>& syringes, float& moveSpeed, bool& invulnerable, sf::Clock& syringeClock);
-    static void spawnSyringe(std::vector<Syringe>& syringes, const sf::Texture& syringeTexture, const sf::RenderWindow& window, sf::Clock& syringeRespawnClock, const sf::Sprite& hero, float minDistance);
+    static void spawnSyringe(std::vector<Syringe>& syringes, const sf::Texture& syringe_texture, const sf::RenderWindow& window, sf::Clock& syringeRespawnClock, const sf::Sprite& hero, float minDistance);
+    static void checkHeroSyringeCollisions(std::vector<Syringe>& syringes, AnimatedSprite& hero, sf::Clock& syringeClock, float& move_speed, float& orgmove_speed, bool& invulnerable);
 
 private:
     float effectDuration;

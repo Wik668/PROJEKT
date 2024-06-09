@@ -31,11 +31,13 @@ void Ammo::spawnAmmo(std::vector<Ammo>& ammoPacks, const sf::Texture& ammoTextur
     ammoRespawnClock.restart();
 }
 
-void Ammo::checkHeroAmmoCollisions(std::vector<Ammo>& ammoPacks, sf::Sprite& hero, bool& unlimitedAmmo, sf::Clock& unlimitedAmmoClock, bool& reloading, std::function<void()> updateAmmoText) {
+void Ammo::checkHeroAmmoCollisions(std::vector<Ammo>& ammoPacks, sf::Sprite& hero, bool& unlimitedAmmo, sf::Clock& unlimitedAmmoClock, bool& reloading, std::function<void()> updateAmmoText, bool& tripleShotActive, sf::Clock& tripleShotClock) {
     for (auto it = ammoPacks.begin(); it != ammoPacks.end();) {
         if (hero.getGlobalBounds().intersects(it->getGlobalBounds())) {
             unlimitedAmmo = true;
+            tripleShotActive = true;
             unlimitedAmmoClock.restart();
+            tripleShotClock.restart();
             it = ammoPacks.erase(it); // Remove collected ammo
             if (reloading) {
                 reloading = false;
@@ -46,6 +48,7 @@ void Ammo::checkHeroAmmoCollisions(std::vector<Ammo>& ammoPacks, sf::Sprite& her
         }
     }
 }
+
 
 void Ammo::setScale(float x, float y) {
     sf::Sprite::setScale(x, y);
