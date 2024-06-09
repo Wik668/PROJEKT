@@ -147,7 +147,7 @@ void Boss::addBossAnimationFrames(Boss& boss) {
 }
 
 void Boss::createBoss(std::vector<Boss>& bosses, sf::Texture& boss_texture, sf::RenderWindow& window) {
-    const int margin = 150;
+    const int margin = 300;
     int maxX = window.getSize().x - margin;
     int maxY = window.getSize().y - margin;
     int minX = margin;

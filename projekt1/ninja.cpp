@@ -28,12 +28,15 @@ void Ninja::createClone(const sf::Texture* ninja_texture) {
 
 void Ninja::updateClones() {
     sf::Time currentTime = clock.getElapsedTime();
-    clones.erase(std::remove_if(clones.begin(), clones.end(),
-                                [currentTime](const std::pair<Ninja, sf::Time>& clone) {
-                                    return (currentTime - clone.second).asSeconds() > 3.0f;
-                                }),
-                 clones.end());
+    for (auto it = clones.begin(); it != clones.end(); ) {
+        if ((currentTime - it->second).asSeconds() > 3.0f) {
+            it = clones.erase(it);
+        } else {
+            ++it;
+        }
+    }
 }
+
 
 void Ninja::add_animation_frame_right(const sf::IntRect& frame) {
     framesRight.push_back(frame);

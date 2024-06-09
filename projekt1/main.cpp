@@ -502,7 +502,7 @@ public:
                         gameMusic.stop();
                         survivalTime = survivalClock.getElapsedTime().asSeconds();
                         int totalKills = zombiesKilled + Ninja_killed + Slime_killed;
-                        endGameMenu.updateStats(survivalTime, totalKills);
+                        showEndGameMenu(true, survivalTime, totalKills);
                     }
                 }
             }
@@ -632,7 +632,6 @@ public:
             Medkit::checkHeroMedkitCollisions(medkits, hero, health, [this]() { updateHealthText(); });
             Ammo::checkHeroAmmoCollisions(ammoPacks, hero, unlimitedAmmo, unlimitedAmmoClock, reloading, [this]() { updateAmmoText(); }, tripleShotActive, tripleShotClock);
 
-
             if (Keyboard::isKeyPressed(Keyboard::A)) {
                 hero.moveWithCollision(bounds, -move_speed, 0);
             } else if (Keyboard::isKeyPressed(Keyboard::D)) {
@@ -663,7 +662,7 @@ public:
                             gameMusic.stop();
                             survivalTime = survivalClock.getElapsedTime().asSeconds();
                             int totalKills = zombiesKilled + Ninja_killed + Slime_killed;
-                            showEndGameMenu(true, survivalTime, totalKills);
+                            showEndGameMenu(false, survivalTime, totalKills);
                         }
                     }
                 }
@@ -691,7 +690,7 @@ public:
                             gameMusic.stop();
                             survivalTime = survivalClock.getElapsedTime().asSeconds();
                             int totalKills = zombiesKilled + Ninja_killed + Slime_killed;
-                            showEndGameMenu(true, survivalTime, totalKills);
+                            showEndGameMenu(false, survivalTime, totalKills);
                         }
                     }
                 }
@@ -731,8 +730,6 @@ public:
                 float moveY = direction.y * 0.05;
                 ninja.moveWithCollision(bounds, moveX, moveY);
                 ninja.step(playerPosition, bounds); // Pass arguments
-
-                // Update clones for each ninja
 
                 // Resolve collisions with other ninjas
                 for (auto& otherNinja : ninjas) {
@@ -891,11 +888,8 @@ public:
             for (const auto& medkit : medkits) {
                 window.draw(medkit);
             }
-            for (auto& ninja : ninjas) {
-                ninja.step(hero.getPosition(), windowBounds); // Pass arguments
+            for (const auto& ninja : ninjas) {
                 window.draw(ninja);
-
-                // Draw clones for each ninja
                 for (const auto& clone : ninja.getClones()) {
                     window.draw(clone);
                 }
