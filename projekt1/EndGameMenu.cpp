@@ -12,14 +12,10 @@ EndGameMenu::EndGameMenu() : selectedBackToMenu(true) {
 
     if (!buffer.loadFromFile("menu_music.wav")) {
         std::cout << "Nie udało się wczytać dźwięku menu" << std::endl;
+    } else {
+        sound.setBuffer(buffer);
+        sound.setLoop(true);
     }
-
-    if (!endGameMusic.openFromFile("Fisticuffs and Ale.ogg")) {
-        std::cout << "Nie udało się wczytać muzyki końcowej gry" << std::endl;
-    }
-
-    sound.setBuffer(buffer);
-    sound.setLoop(true);
 
     background_sprite.setTexture(background_texture);
 
