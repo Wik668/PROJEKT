@@ -99,18 +99,18 @@ bool Boss::isFarEnough(const sf::Vector2f& pos1, float minDistance) {
 
 void Boss::addBossAnimationFrames(Boss& boss) {
     std::vector<sf::IntRect> frames = {
-        sf::IntRect(108, 219, 64, 139),
-        sf::IntRect(397, 221, 64, 139),
-        sf::IntRect(685, 219, 64, 139),
-        sf::IntRect(973, 220, 64, 139),
-        sf::IntRect(1260, 220, 64, 139),
-        sf::IntRect(1549, 220, 64, 139),
-        sf::IntRect(1834, 220, 64, 139),
-        sf::IntRect(2122, 220, 64, 139),
-        sf::IntRect(2410, 220, 64, 139),
-        sf::IntRect(2700, 220, 64, 139),
-        sf::IntRect(2989, 220, 64, 139),
-        sf::IntRect(3276, 220, 64, 139)
+        sf::IntRect(108, 219, 90, 100),// prostokat wg gimpa 65x100
+        sf::IntRect(397, 221, 90, 100),
+        sf::IntRect(685, 219, 90, 100),
+        sf::IntRect(973, 220, 90, 100),
+        sf::IntRect(1260, 220, 90, 100),
+        sf::IntRect(1549, 220, 90, 100),
+        sf::IntRect(1834, 220, 90, 100),
+        sf::IntRect(2122, 220, 90, 100),
+        sf::IntRect(2410, 220, 90, 100),
+        sf::IntRect(2700, 220, 90, 100),
+        sf::IntRect(2989, 220, 90, 100),
+        sf::IntRect(3276, 220, 90, 100)
     };
 
     for (const auto& frame : frames) {
