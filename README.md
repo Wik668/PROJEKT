@@ -30,6 +30,7 @@ Dodatkowe Wskazówki
 - Używaj energetyków w krytycznych momentach, aby zyskać przewagę nad przeciwnikami.
 
 Instrukcja pobrania gry:
+
 -Wejdź w projekt1, znajdź JerryTheKiller.zip, pobierz go, wyeksportuj i odpal projekt1.exe
 
 Życzymy miłej gry!
