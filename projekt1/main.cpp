@@ -874,6 +874,7 @@
         void render() {
             window.clear();
             if (gameStarted) {
+
                 sf::FloatRect windowBounds(0, 0, window_width, window_height); // Declare windowBounds here
 
                 for (int x = 0; x < window_width; x += background_texture.getSize().x) {
