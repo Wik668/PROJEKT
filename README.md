@@ -29,7 +29,7 @@ Dodatkowe Wskazówki
 - Staraj się zbierać wszystkie dodatkowe przedmioty, które znajdziesz na mapie. Apteczki przedłużą twoje życie, a amunicja zapewnia, że nie zabraknie ci kul.
 - Używaj energetyków w krytycznych momentach, aby zyskać przewagę nad przeciwnikami.
 
-Instrukcja pobrania gry
+Instrukcja pobrania gry:
 Wejdź w projekt1, znajdź JerryTheKiller.zip, pobierz go, wyeksportuj i odpal projekt1.exe
 
 Życzymy miłej gry!
