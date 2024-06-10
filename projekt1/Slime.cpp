@@ -144,7 +144,7 @@ void Slime::checkHeroSlimeCollisions(std::vector<Slime>& slimes, sf::Sprite& her
     for (auto& slime : slimes) {
         if (hero.getGlobalBounds().intersects(slime.getGlobalBounds())) {
             if (!invulnerable) {
-                health -= damage * 10;
+                health -= damage * 0.01;
                 updateHealthText();
                 if (health <= 0.0) {
                     gameEnded = true;

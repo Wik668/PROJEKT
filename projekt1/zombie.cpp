@@ -84,16 +84,16 @@ Zombie Zombie::clone() const {
 
 void Zombie::addZombieAnimationFrames() {
     std::vector<sf::IntRect> frames = {
-        sf::IntRect(11, 69, 14, 26),
-        sf::IntRect(42, 69, 14, 26),
-        sf::IntRect(74, 69, 14, 26),
-        sf::IntRect(107, 69, 14, 26),
-        sf::IntRect(140, 69, 14, 26),
-        sf::IntRect(173, 69, 14, 26),
-        sf::IntRect(204, 69, 14, 26),
-        sf::IntRect(231, 100, 17, 26),
-        sf::IntRect(269, 69, 14, 26),
-        sf::IntRect(300, 69, 14, 26)
+        sf::IntRect(11, 69, 20, 26),
+        sf::IntRect(42, 69, 20, 26),
+        sf::IntRect(74, 69, 20, 26),
+        sf::IntRect(107, 69, 20, 26),
+        sf::IntRect(140, 69, 20, 26),
+        sf::IntRect(173, 69, 20, 26),
+        sf::IntRect(204, 69, 20, 26),
+       // sf::IntRect(231, 69, 20, 26),
+        sf::IntRect(269, 69, 20, 26),
+        sf::IntRect(300, 69, 20, 26)
     };
 
     for (const auto& frame : frames) {
@@ -105,7 +105,7 @@ bool Zombie::isFarEnough(const sf::Vector2f& pos1, const sf::Vector2f& pos2, flo
     return std::hypot(pos1.x - pos2.x, pos1.y - pos2.y) > minDistance;
 }
 
-void Zombie::createZombie(std::vector<Zombie>& zombies, sf::Texture& zombie_texture, sf::RenderWindow& window) {
+void Zombie::createZombie(std::vector<std::unique_ptr<Zombie>>& zombies, sf::Texture& zombie_texture, sf::RenderWindow& window) {
     const int margin = 50;
     int maxX = window.getSize().x - margin;
     int maxY = window.getSize().y - margin;
@@ -119,21 +119,22 @@ void Zombie::createZombie(std::vector<Zombie>& zombies, sf::Texture& zombie_text
         newPosition = sf::Vector2f(static_cast<float>(posX), static_cast<float>(posY));
     } while (!Zombie::isFarEnough(newPosition, {0, 0}, 75.0f)); // Assuming {0, 0} as a placeholder for hero position
 
-    Zombie zombie(5);
-    zombie.setTexture(zombie_texture);
-    zombie.addZombieAnimationFrames();
-    zombie.setTextureRect(sf::IntRect(11, 69, 14, 26));
-    zombie.setScale(2, 2);
-    zombie.setPosition(newPosition);
-    zombie.step();
-    zombies.push_back(zombie);
+    auto zombie = std::make_unique<Zombie>(5);
+    zombie->setTexture(zombie_texture);
+    zombie->addZombieAnimationFrames();
+    zombie->setTextureRect(sf::IntRect(11, 69, 14, 26));
+    zombie->setScale(2, 2);
+    zombie->setPosition(newPosition);
+    zombie->step();
+    zombies.push_back(std::move(zombie));
 }
 
-void Zombie::checkHeroZombieCollisions(std::vector<Zombie>& zombies, sf::Sprite& hero, float& health, bool invulnerable, float damage, bool& gameEnded, sf::Music& gameMusic, std::function<void()> updateHealthText) {
+
+void Zombie::checkHeroZombieCollisions(std::vector<std::unique_ptr<Zombie>>& zombies, sf::Sprite& hero, float& health, bool invulnerable, float damage, bool& gameEnded, sf::Music& gameMusic, std::function<void()> updateHealthText) {
     for (auto& zombie : zombies) {
-        if (hero.getGlobalBounds().intersects(zombie.getGlobalBounds())) {
+        if (hero.getGlobalBounds().intersects(zombie->getGlobalBounds())) {
             if (!invulnerable) {
-                health -= damage;
+                health -= damage * 0.007;
                 updateHealthText();
                 if (health <= 0.0) {
                     gameEnded = true;
@@ -143,3 +144,4 @@ void Zombie::checkHeroZombieCollisions(std::vector<Zombie>& zombies, sf::Sprite&
         }
     }
 }
+

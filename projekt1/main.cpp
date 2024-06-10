@@ -25,7 +25,7 @@ using namespace std;
 using namespace sf;
 
 class Game {
-    vector<Zombie> zombies;
+    std::vector<std::unique_ptr<Zombie>> zombies;
     sf::Texture zombie_texture;
     vector<Ninja> ninjas;
     sf::Texture ninja_texture;
@@ -77,7 +77,7 @@ private:
     sf::Texture stageButtonTexture;
     sf::Texture stageButtonTextureRed;
     sf::Text endGameText;
-    float damage = 0.001;
+    float damage = 1.0;
     std::vector<SlimeProjectile> slimeProjectiles;
     std::vector<Fireball> Fireball;
     sf::Texture fireballtexture;
@@ -111,13 +111,12 @@ private:
         sf::Vector2f heroPosition = hero.getPosition();
         return std::abs(position.x - heroPosition.x) >= distance && std::abs(position.y - heroPosition.y) >= distance;
     }
-    void showEndGameMenu(bool playerWon, float survivalTime, int killCount) {
-        endGameMenu.showEndGameMenu(playerWon, survivalTime, killCount, window, gameStarted, gameEnded, survivalMode, gameMusic, survivalClock, menu, [this]() { resetGame(); }, [this](int round) { startRound(round); });
-    }
+
     void exitWithError(const std::string& errorMessage) {
         std::cout << errorMessage << std::endl;
         exit(1);
     }
+
     void loadResources() {
         std::vector<std::pair<std::string, sf::Texture*>> textures = {
             {"boss.png", &boss_texture},
@@ -234,14 +233,26 @@ public:
 
     void run() {
         menu.playSound();
-        while (window.isOpen()) {
+        //endGameMenu.playSound();
+        sf::Clock clock;
+        float timeSinceLastUpdate = 0.0f;
+        float timePerFrame = 1.f / 1400.f; // około 0.03333 sekundy
 
-            handleEvents();
-            update();
-            render();
+        while (window.isOpen()) {
+            sf::Time elapsedTime = clock.restart();
+            timeSinceLastUpdate += elapsedTime.asSeconds();
+
+            handleEvents(); // Obsługa zdarzeń może być poza kontrolą czasu, aby szybko reagować na akcje użytkownika
+
+            while (timeSinceLastUpdate > timePerFrame) {
+                timeSinceLastUpdate -= timePerFrame;
+                update(); // aktualizuj logikę gry
+            }
+
+            render(); // rysuj stan gry na ekranie
         }
 
-        gameMusic.stop();
+        gameMusic.stop(); // zatrzymaj muzykę na koniec gry
     }
     void resetGame() {
         health = 100;
@@ -344,8 +355,6 @@ public:
         }
     }
 
-
-
     void startGame(bool survival) {
         gameStarted = true;
         gameEnded = false;
@@ -374,7 +383,6 @@ public:
         ammoText.setString(ss.str());
     }
 
-
     void reload() {
         if (!reloading && !unlimitedAmmo) {
             reloading = true;
@@ -383,17 +391,15 @@ public:
         }
     }
 
-
-
     void checkBulletCollisions() {
         for (auto bulletIt = bullets.begin(); bulletIt != bullets.end();) {
             bool bulletErased = false;
             for (auto zombieIt = zombies.begin(); zombieIt != zombies.end();) {
-                if (checkCollision(*bulletIt, *zombieIt)) {
+                if (checkCollision(*bulletIt, *(*zombieIt))) { // Dereference unique_ptr to get Zombie reference
                     bulletIt = bullets.erase(bulletIt);
-                    zombieIt->takeDamage(50);
+                    (*zombieIt)->takeDamage(50); // Use -> to access Zombie methods
                     bulletErased = true;
-                    if (zombieIt->getHealth() <= 0) {
+                    if ((*zombieIt)->getHealth() <= 0) {
                         zombieIt = zombies.erase(zombieIt);
                         zombiesKilled++;
                         updateKillCounterText();
@@ -502,13 +508,12 @@ public:
                         gameMusic.stop();
                         survivalTime = survivalClock.getElapsedTime().asSeconds();
                         int totalKills = zombiesKilled + Ninja_killed + Slime_killed;
-                        showEndGameMenu(true, survivalTime, totalKills);
+                        endGameMenu.showEndGameMenu(true, survivalTime, totalKills, window, gameStarted, gameEnded, survivalMode, gameMusic, survivalClock, menu, [this]() { resetGame(); }, [this](int round) { startRound(round); });
                     }
                 }
             }
         }
     }
-
 
 
     void handleEvents() {
@@ -568,7 +573,6 @@ public:
             }
         }
     }
-
 
     void updateButtonColors(const sf::Vector2i& mousePos) {
         if (menu.isMouseOverButton(menu.survivalButton, mousePos)) {
@@ -653,7 +657,7 @@ public:
                 projectile.update();
                 if (checkCollision(hero, projectile)) {
                     if (!invulnerable) {
-                        health -= damage * 50000;
+                        health -= damage * 10;
                         updateHealthText();
                         projectile = slimeProjectiles.back();
                         slimeProjectiles.pop_back();
@@ -662,7 +666,7 @@ public:
                             gameMusic.stop();
                             survivalTime = survivalClock.getElapsedTime().asSeconds();
                             int totalKills = zombiesKilled + Ninja_killed + Slime_killed;
-                            showEndGameMenu(false, survivalTime, totalKills);
+                            endGameMenu.showEndGameMenu(false, survivalTime, totalKills, window, gameStarted, gameEnded, survivalMode, gameMusic, survivalClock, menu, [this]() { resetGame(); }, [this](int round) { startRound(round); });
                         }
                     }
                 }
@@ -681,7 +685,7 @@ public:
                 projectile.update();
                 if (checkCollision(hero, projectile)) {
                     if (!invulnerable) {
-                        health -= damage * 2000;
+                        health -= damage * 15;
                         updateHealthText();
                         projectile = Fireball.back();
                         Fireball.pop_back();
@@ -690,7 +694,7 @@ public:
                             gameMusic.stop();
                             survivalTime = survivalClock.getElapsedTime().asSeconds();
                             int totalKills = zombiesKilled + Ninja_killed + Slime_killed;
-                            showEndGameMenu(false, survivalTime, totalKills);
+                            endGameMenu.showEndGameMenu(false, survivalTime, totalKills, window, gameStarted, gameEnded, survivalMode, gameMusic, survivalClock, menu, [this]() { resetGame(); }, [this](int round) { startRound(round); });
                         }
                     }
                 }
@@ -703,19 +707,19 @@ public:
 
             // Update positions and resolve collisions for all zombies
             for (auto& zombie : zombies) {
-                Vector2f zombiePosition = zombie.getPosition();
+                Vector2f zombiePosition = zombie->getPosition(); // Dereference unique_ptr to get position
                 Vector2f direction = playerPosition - zombiePosition;
                 direction = normalize(direction);
 
                 float moveX = direction.x * 0.02;
                 float moveY = direction.y * 0.02;
-                zombie.moveWithCollision(bounds, moveX, moveY);
-                zombie.step();
+                zombie->moveWithCollision(bounds, moveX, moveY); // Dereference unique_ptr to call method
+                zombie->step(); // Dereference unique_ptr to call method
 
                 // Resolve collisions with other zombies
                 for (auto& otherZombie : zombies) {
-                    if (&zombie != &otherZombie && checkCollision(zombie, otherZombie)) {
-                        resolveCollision(zombie, otherZombie);
+                    if (zombie != otherZombie && checkCollision(*zombie, *otherZombie)) { // Dereference unique_ptr to check collision
+                        resolveCollision(*zombie, *otherZombie); // Dereference unique_ptr to resolve collision
                     }
                 }
             }
@@ -780,14 +784,6 @@ public:
             Ninja::checkHeroNinjaCollisions(ninjas, hero, health, invulnerable, damage, gameEnded, gameMusic, [this]() { updateHealthText(); });
             Slime::checkHeroSlimeCollisions(slimes, hero, health, invulnerable, damage, gameEnded, gameMusic, [this]() { updateHealthText(); });
             Boss::checkHeroBossCollisions(bosses, hero, health, invulnerable, damage, gameEnded, gameMusic, [this]() { updateHealthText(); });
-
-            if (survivalMode) {
-                Time elapsed = survivalClock.getElapsedTime();
-                std::stringstream ss;
-                ss << "Survival Time: " << std::fixed << std::setprecision(1) << elapsed.asSeconds() << " seconds";
-                timerText.setString(ss.str());
-            }
-
             for (auto& bullet : bullets) {
                 bullet.update();
             }
@@ -831,7 +827,7 @@ public:
             });
             if (!anyBossDyingOrInPostDeathDelay) {
                 if (roundStarted) {
-                    bool allZombiesKilled = std::all_of(zombies.begin(), zombies.end(), [](const Zombie& z){ return z.getHealth() <= 0.0; });
+                    bool allZombiesKilled = std::all_of(zombies.begin(), zombies.end(), [](const std::unique_ptr<Zombie>& z){ return z->getHealth() <= 0.0; });
                     bool allNinjasKilled = std::all_of(ninjas.begin(), ninjas.end(), [](const Ninja& n){ return n.getHealth() <= 0.0; });
                     bool allSlimesKilled = std::all_of(slimes.begin(), slimes.end(), [](const Slime& n){ return n.getHealth() <= 0.0; });
                     bool allBossesKilled = std::all_of(bosses.begin(), bosses.end(), [](const Boss& n){ return n.getHealth() <= 0.0; });
@@ -844,7 +840,7 @@ public:
                             gameMusic.stop();
                             survivalTime = survivalClock.getElapsedTime().asSeconds();
                             int totalKills = zombiesKilled + Ninja_killed + Slime_killed;
-                            showEndGameMenu(true, survivalTime, totalKills);
+                            endGameMenu.showEndGameMenu(true, survivalTime, totalKills, window, gameStarted, gameEnded, survivalMode, gameMusic, survivalClock, menu, [this]() { resetGame(); }, [this](int round) { startRound(round); });
                         }
                     }
                 }
@@ -883,7 +879,7 @@ public:
             window.draw(hero);
 
             for (const auto& zombie : zombies) {
-                window.draw(zombie);
+                window.draw(*zombie);  // Dereference unique_ptr to draw the zombie
             }
             for (const auto& medkit : medkits) {
                 window.draw(medkit);
@@ -935,6 +931,7 @@ public:
         window.display();
     }
 
+
     void updateKillCounterText() {
         std::stringstream ss;
         ss << "Kills: " << zombiesKilled + Ninja_killed + Slime_killed;
@@ -963,7 +960,6 @@ public:
             sprite2.move(0, overlapY / 2);
         }
     }
-
 };
 
 int main() {

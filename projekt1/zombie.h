@@ -29,8 +29,8 @@ public:
     Zombie clone() const;
 
     void addZombieAnimationFrames();
-    static void createZombie(std::vector<Zombie>& zombies, sf::Texture& zombie_texture, sf::RenderWindow& window);
-    static void checkHeroZombieCollisions(std::vector<Zombie>& zombies, sf::Sprite& hero, float& health, bool invulnerable, float damage, bool& gameEnded, sf::Music& gameMusic, std::function<void()> updateHealthText);
+    static void createZombie(std::vector<std::unique_ptr<Zombie>>& zombies, sf::Texture& zombie_texture, sf::RenderWindow& window);
+    static void checkHeroZombieCollisions(std::vector<std::unique_ptr<Zombie>>& zombies, sf::Sprite& hero, float& health, bool invulnerable, float damage, bool& gameEnded, sf::Music& gameMusic, std::function<void()> updateHealthText);
 
 private:
     std::vector<sf::IntRect> framesRight;

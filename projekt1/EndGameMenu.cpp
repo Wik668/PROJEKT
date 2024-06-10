@@ -21,14 +21,8 @@ EndGameMenu::EndGameMenu() : selectedBackToMenu(true) {
 
     // Ustawienie elementów tekstu i przycisków po lewej stronie
     float xPosition = 50; // Pozycja X dla tekstu i przycisków
-    float initialYPosition = 100; // Początkowa pozycja Y dla tekstu "Game Over"
+    float initialYPosition = 100; // Początkowa pozycja Y
     float buttonYOffset = 100; // Odstęp Y dla przycisków
-
-    // gameOverText.setFont(font);
-    // gameOverText.setString("Game Over");
-    // gameOverText.setCharacterSize(48);
-    // gameOverText.setFillColor(sf::Color::Red);
-    // gameOverText.setPosition(xPosition, initialYPosition);
 
     backToMenuText.setFont(font);
     backToMenuText.setString("Back to Menu");
@@ -77,6 +71,19 @@ EndGameMenu::EndGameMenu() : selectedBackToMenu(true) {
 
     updateSelection();
 }
+
+void EndGameMenu::setEndMessage(const std::string& message) {
+    gameOverText.setFont(font); // Ensure the font is set
+    gameOverText.setString(message);
+    gameOverText.setCharacterSize(30); // Set a suitable size for visibility
+    gameOverText.setFillColor(sf::Color::Yellow); // Set color to white
+
+    // Center the text on the screen
+    sf::FloatRect textRect = gameOverText.getLocalBounds();
+    gameOverText.setOrigin(textRect.left + textRect.width / 2.0f, textRect.top + textRect.height / 2.0f);
+    gameOverText.setPosition(sf::Vector2f(400, 100)); // Assuming window size is 800x600 for example
+}
+
 
 void EndGameMenu::playSound() {
     sound.play();
@@ -169,11 +176,6 @@ void EndGameMenu::updateStats(float survivalTime, int killCount) {
     killCountText.setString(ss.str());
 }
 
-void EndGameMenu::setEndMessage(const std::string& message) {
-    gameOverText.setString(message);
-    gameOverText.setPosition(250, 100); // Adjust position as needed
-}
-
 void EndGameMenu::setTimeLabel(const std::string& label) {
     std::string currentText = survivalTimeText.getString();
     std::string newText = label + currentText.substr(currentText.find(":"));
@@ -183,18 +185,19 @@ void EndGameMenu::setTimeLabel(const std::string& label) {
 void EndGameMenu::showEndGameMenu(bool playerWon, float survivalTime, int killCount, sf::RenderWindow& window, bool& gameStarted, bool& gameEnded, bool& survivalMode, sf::Music& gameMusic, sf::Clock& survivalClock, Menu& menu, std::function<void()> resetGame, std::function<void(int)> startRound) {
     if (!survivalMode) {
         if (playerWon) {
-            setEndMessage("You are the WINNER");
+            setEndMessage("Congratulations! You Won!");
         } else {
             setEndMessage("");
         }
     } else {
-        // Dla trybu przetrwania pomiń wyświetlanie jakiejkolwiek wiadomości końcowej
-        setEndMessage("");  // Ustaw pusty tekst
+        setEndMessage(""); // In survival mode, perhaps you want to display nothing or customize this part
     }
 
     updateStats(survivalTime, killCount);
     playSound();
     playMusic();
+
+    // Handle event and rendering loop already correctly provided
 
     while (window.isOpen()) {
         sf::Event event;

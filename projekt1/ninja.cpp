@@ -199,7 +199,7 @@ void Ninja::checkHeroNinjaCollisions(std::vector<Ninja>& ninjas, sf::Sprite& her
     for (auto& ninja : ninjas) {
         if (hero.getGlobalBounds().intersects(ninja.getGlobalBounds())) {
             if (!invulnerable) {
-                health -= damage * 5;
+                health -= damage * 0.005;
                 updateHealthText();
                 if (health <= 0.0) {
                     gameEnded = true;

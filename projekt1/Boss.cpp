@@ -4,7 +4,7 @@
 #include <functional>
 
 Boss::Boss(float speed) : speed(speed), health(500.0f), current_frame(0), animation_delay(0.1f),
-    dying(false), dead(false), deathAnimationDuration(1.0f), postDeathDelay(5.0f) {
+    dying(false), dead(false), deathAnimationDuration(1.0f), postDeathDelay(1.0f) {
     animationClock.restart();
 }
 
@@ -174,7 +174,7 @@ void Boss::checkHeroBossCollisions(std::vector<Boss>& bosses, sf::Sprite& hero, 
     for (auto& boss : bosses) {
         if (hero.getGlobalBounds().intersects(boss.getGlobalBounds())) {
             if (!invulnerable) {
-                health -= damage * 10;
+                health -= damage * 0.02;
                 updateHealthText();
                 if (health <= 0.0) {
                     gameEnded = true;

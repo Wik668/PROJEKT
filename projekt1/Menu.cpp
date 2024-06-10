@@ -20,30 +20,30 @@ Menu::Menu() : selectedSurvival(true) {
 
     text.setFont(font);
     text.setString("Select game");
-    text.setCharacterSize(24);
-    text.setFillColor(sf::Color::White);
-    text.setPosition(250, 300);
+    text.setCharacterSize(30);
+    text.setFillColor(sf::Color::Yellow);
+    text.setPosition(300, 200);
 
     survivalText.setFont(font);
     survivalText.setString("Survival Mode");
     survivalText.setCharacterSize(24);
     survivalText.setFillColor(sf::Color::White);
-    survivalText.setPosition(250, 350);
+    survivalText.setPosition(300, 260);
 
     stageText.setFont(font);
     stageText.setString("Stage Mode");
     stageText.setCharacterSize(24);
     stageText.setFillColor(sf::Color::White);
-    stageText.setPosition(250, 400);
+    stageText.setPosition(300, 310);
 
     survivalButton.setSize(sf::Vector2f(200, 50));
-    survivalButton.setPosition(240, 345);
+    survivalButton.setPosition(290, 255);
     survivalButton.setFillColor(sf::Color::Transparent);
     survivalButton.setOutlineThickness(2);
     survivalButton.setOutlineColor(sf::Color::White);
 
     stageButton.setSize(sf::Vector2f(200, 50));
-    stageButton.setPosition(240, 395);
+    stageButton.setPosition(290, 305 );
     stageButton.setFillColor(sf::Color::Transparent);
     stageButton.setOutlineThickness(2);
     stageButton.setOutlineColor(sf::Color::White);
