@@ -43,7 +43,7 @@ private:
     bool tripleShotActive = false;
     sf::Clock tripleShotClock;
     float health;
-    float orgmove_speed = 0.1;
+    float orgmove_speed = 0.45;
     sf::Text healthText;
     int window_width = 800;
     int window_height = 600;
@@ -163,8 +163,8 @@ public:
         endGameMenu(),
         gameStarted(false),
         gameEnded(false),
-        move_speed(0.1f),
-        bullet_speed(0.5f),
+        move_speed(0.45f),
+        bullet_speed(2.25f),
         zombiesKilled(0),
         Ninja_killed(0),
         Slime_killed(0),
@@ -236,7 +236,7 @@ public:
         //endGameMenu.playSound();
         sf::Clock clock;
         float timeSinceLastUpdate = 0.0f;
-        float timePerFrame = 1.f / 1400.f; // około 0.03333 sekundy
+        float timePerFrame = 1.f / 300.f; // około 0.03333 sekundy
 
         while (window.isOpen()) {
             sf::Time elapsedTime = clock.restart();
@@ -711,8 +711,8 @@ public:
                 Vector2f direction = playerPosition - zombiePosition;
                 direction = normalize(direction);
 
-                float moveX = direction.x * 0.02;
-                float moveY = direction.y * 0.02;
+                float moveX = direction.x * 0.16;
+                float moveY = direction.y * 0.16;
                 zombie->moveWithCollision(bounds, moveX, moveY); // Dereference unique_ptr to call method
                 zombie->step(); // Dereference unique_ptr to call method
 
@@ -730,8 +730,8 @@ public:
                 Vector2f direction = playerPosition - ninjaPosition;
                 direction = normalize(direction);
 
-                float moveX = direction.x * 0.05;
-                float moveY = direction.y * 0.05;
+                float moveX = direction.x * 0.35;
+                float moveY = direction.y * 0.35;
                 ninja.moveWithCollision(bounds, moveX, moveY);
                 ninja.step(playerPosition, bounds); // Pass arguments
 
@@ -749,8 +749,8 @@ public:
                 Vector2f direction = playerPosition - slimePosition;
                 direction = normalize(direction);
 
-                float moveX = direction.x * 0.005;
-                float moveY = direction.y * 0.005;
+                float moveX = direction.x * 0.05;
+                float moveY = direction.y * 0.05;
                 slime.moveWithCollision(bounds, moveX, moveY);
                 slime.step();
 
@@ -768,8 +768,8 @@ public:
                 Vector2f direction = playerPosition - bossPosition;
                 direction = normalize(direction);
 
-                float moveX = direction.x * 0.01;
-                float moveY = direction.y * 0.01;
+                float moveX = direction.x * 0.1;
+                float moveY = direction.y * 0.1;
                 boss.moveWithCollision(bounds, moveX, moveY);
 
                 // Resolve collisions with other bosses

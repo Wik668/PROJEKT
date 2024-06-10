@@ -1,5 +1,7 @@
 #include "Menu.h"
+#include <iostream>
 
+// Konstruktor klasy Menu inicjalizujący menu gry
 Menu::Menu() : selectedSurvival(true) {
     if (!font.loadFromFile("arial.ttf")) {
         std::cout << "Nie udało się wczytać czcionki" << std::endl;
@@ -43,7 +45,7 @@ Menu::Menu() : selectedSurvival(true) {
     survivalButton.setOutlineColor(sf::Color::White);
 
     stageButton.setSize(sf::Vector2f(200, 50));
-    stageButton.setPosition(290, 305 );
+    stageButton.setPosition(290, 305);
     stageButton.setFillColor(sf::Color::Transparent);
     stageButton.setOutlineThickness(2);
     stageButton.setOutlineColor(sf::Color::White);
@@ -51,14 +53,17 @@ Menu::Menu() : selectedSurvival(true) {
     updateSelection();
 }
 
+// Metoda odtwarzająca dźwięk menu
 void Menu::playSound() {
     sound.play();
 }
 
+// Metoda zatrzymująca dźwięk menu
 void Menu::stopSound() {
     sound.stop();
 }
 
+// Metoda rysująca elementy menu na oknie
 void Menu::draw(sf::RenderWindow& window) {
     window.draw(background_sprite);
     window.draw(text);
@@ -68,24 +73,29 @@ void Menu::draw(sf::RenderWindow& window) {
     window.draw(stageButton);
 }
 
+// Metoda przesuwająca wybór w menu do góry
 void Menu::moveSelectionUp() {
     selectedSurvival = true;
     updateSelection();
 }
 
+// Metoda przesuwająca wybór w menu do dołu
 void Menu::moveSelectionDown() {
     selectedSurvival = false;
     updateSelection();
 }
 
+// Metoda sprawdzająca, czy wybrano tryb przetrwania
 bool Menu::isSurvivalSelected() const {
     return selectedSurvival;
 }
 
+// Metoda sprawdzająca, czy mysz znajduje się nad przyciskiem
 bool Menu::isMouseOverButton(const sf::RectangleShape& button, const sf::Vector2i& mousePosition) const {
     return button.getGlobalBounds().contains(sf::Vector2f(mousePosition));
 }
 
+// Metoda aktualizująca stan menu na podstawie pozycji myszy
 void Menu::update(const sf::Vector2i& mousePosition) {
     if (isMouseOverButton(survivalButton, mousePosition)) {
         survivalText.setFillColor(sf::Color::Red);
@@ -100,6 +110,7 @@ void Menu::update(const sf::Vector2i& mousePosition) {
     }
 }
 
+// Metoda aktualizująca wybór w menu
 void Menu::updateSelection() {
     if (selectedSurvival) {
         survivalText.setFillColor(sf::Color::Red);

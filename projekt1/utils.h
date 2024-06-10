@@ -4,6 +4,7 @@
 #include <SFML/System/Vector2.hpp>
 #include <cmath>
 
+// Funkcja normalizująca wektor 2D
 inline sf::Vector2f normalize(sf::Vector2f vec) {
     float length = std::sqrt(vec.x * vec.x + vec.y * vec.y);
     if (length != 0) {

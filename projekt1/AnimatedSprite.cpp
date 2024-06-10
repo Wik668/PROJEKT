@@ -1,7 +1,9 @@
 #include "AnimatedSprite.h"
 
+// Konstruktor klasy AnimatedSprite inicjalizujący animację z podaną liczbą klatek na sekundę
 AnimatedSprite::AnimatedSprite(int fps) : currentFrame(0), animationFps(fps), direction(Right) {}
 
+// Metody dodające klatki animacji w różnych kierunkach
 void AnimatedSprite::add_animation_frame_right(const IntRect& frame) {
     framesRight.push_back(frame);
 }
@@ -18,6 +20,7 @@ void AnimatedSprite::add_animation_frame_down(const IntRect& frame) {
     framesDown.push_back(frame);
 }
 
+// Metody dodające klatki animacji stojącej w różnych kierunkach
 void AnimatedSprite::add_standing_frame_right(const IntRect& frame) {
     framesRight.push_back(frame);
 }
@@ -34,6 +37,7 @@ void AnimatedSprite::add_standing_frame_down(const IntRect& frame) {
     framesDown.push_back(frame);
 }
 
+// Metoda aktualizująca animację postaci w zależności od wciśniętych klawiszy
 void AnimatedSprite::step() {
     if (Keyboard::isKeyPressed(Keyboard::A) ||
         Keyboard::isKeyPressed(Keyboard::D) ||
@@ -45,14 +49,15 @@ void AnimatedSprite::step() {
 
         while (frameTime >= timePerFrame) {
             frameTime -= timePerFrame;
-            currentFrame = (currentFrame + 1) % (getFrames().size() - 1); // Skip standing frame
+            currentFrame = (currentFrame + 1) % (getFrames().size() - 1); // Pomijanie klatki stojącej
             setTextureRect(getFrames()[currentFrame]);
         }
     } else {
-        setTextureRect(getFrames().back()); // Set the last frame as standing frame
+        setTextureRect(getFrames().back()); // Ustawienie ostatniej klatki jako klatki stojącej
     }
 }
 
+// Metoda poruszająca postacią z uwzględnieniem kolizji z granicami okna
 void AnimatedSprite::moveWithCollision(const FloatRect& bounds, float offsetX, float offsetY) {
     Vector2f oldPosition = getPosition();
     Sprite::move(offsetX, offsetY);
@@ -72,6 +77,7 @@ void AnimatedSprite::moveWithCollision(const FloatRect& bounds, float offsetX, f
     }
 }
 
+// Metoda inicjalizująca postać bohatera z podaną teksturą
 void AnimatedSprite::initializeHero(const Texture& character_texture) {
     setTexture(character_texture);
     add_animation_frame_right(IntRect(9, 70, 14, 25));
@@ -102,6 +108,7 @@ void AnimatedSprite::initializeHero(const Texture& character_texture) {
     setPosition(250, 250);
 }
 
+// Metoda zwracająca aktualne klatki animacji w zależności od kierunku
 const vector<IntRect>& AnimatedSprite::getFrames() const {
     switch (direction) {
     case Right: return framesRight;
@@ -109,6 +116,6 @@ const vector<IntRect>& AnimatedSprite::getFrames() const {
     case Up: return framesUp;
     case Down: return framesDown;
     }
-    //Aby uniknąć bledow zwraca framesRight
+    // Aby uniknąć błędów zwraca framesRight
     return framesRight;
 }

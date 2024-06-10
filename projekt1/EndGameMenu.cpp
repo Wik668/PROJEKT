@@ -1,6 +1,8 @@
 #include "EndGameMenu.h"
 #include <iomanip>
+#include <iostream>
 
+// Konstruktor klasy EndGameMenu inicjalizujący menu końcowe
 EndGameMenu::EndGameMenu() : selectedBackToMenu(true) {
     if (!font.loadFromFile("arial.ttf")) {
         std::cout << "Nie udało się wczytać czcionki" << std::endl;
@@ -17,12 +19,15 @@ EndGameMenu::EndGameMenu() : selectedBackToMenu(true) {
         sound.setLoop(true);
     }
 
+    if (!endGameMusic.openFromFile("end_game_music.ogg")) {
+        std::cout << "Nie udało się wczytać muzyki końcowej" << std::endl;
+    }
+
     background_sprite.setTexture(background_texture);
 
     // Ustawienie elementów tekstu i przycisków po lewej stronie
     float xPosition = 50; // Pozycja X dla tekstu i przycisków
     float initialYPosition = 100; // Początkowa pozycja Y
-    float buttonYOffset = 100; // Odstęp Y dla przycisków
 
     backToMenuText.setFont(font);
     backToMenuText.setString("Back to Menu");
@@ -59,50 +64,55 @@ EndGameMenu::EndGameMenu() : selectedBackToMenu(true) {
     exitButton.setFillColor(sf::Color::Transparent);
     exitButton.setOutlineThickness(2);
     exitButton.setOutlineColor(sf::Color::White);
+
     survivalTimeText.setFont(font);
     survivalTimeText.setCharacterSize(24);
     survivalTimeText.setFillColor(sf::Color::White);
-    survivalTimeText.setPosition(500, 200); // Adjust position as needed
+    survivalTimeText.setPosition(500, 200);
 
     killCountText.setFont(font);
     killCountText.setCharacterSize(24);
     killCountText.setFillColor(sf::Color::White);
-    killCountText.setPosition(500, 250); // Adjust position as needed
+    killCountText.setPosition(500, 250);
 
     updateSelection();
 }
 
+// Metoda ustawiająca wiadomość końcową
 void EndGameMenu::setEndMessage(const std::string& message) {
-    gameOverText.setFont(font); // Ensure the font is set
+    gameOverText.setFont(font); // Upewnij się, że czcionka jest ustawiona
     gameOverText.setString(message);
-    gameOverText.setCharacterSize(30); // Set a suitable size for visibility
-    gameOverText.setFillColor(sf::Color::Yellow); // Set color to white
+    gameOverText.setCharacterSize(30); // Ustaw odpowiedni rozmiar dla widoczności
+    gameOverText.setFillColor(sf::Color::Yellow); // Ustaw kolor na żółty
 
-    // Center the text on the screen
+    // Wyśrodkowanie tekstu na ekranie
     sf::FloatRect textRect = gameOverText.getLocalBounds();
     gameOverText.setOrigin(textRect.left + textRect.width / 2.0f, textRect.top + textRect.height / 2.0f);
-    gameOverText.setPosition(sf::Vector2f(400, 100)); // Assuming window size is 800x600 for example
+    gameOverText.setPosition(sf::Vector2f(400, 100)); // Zakładając, że rozmiar okna to 800x600
 }
 
-
+// Metoda odtwarzająca dźwięk menu
 void EndGameMenu::playSound() {
     sound.play();
 }
 
+// Metoda zatrzymująca dźwięk menu
 void EndGameMenu::stopSound() {
     sound.stop();
 }
 
+// Metoda odtwarzająca muzykę końcową
 void EndGameMenu::playMusic() {
-    std::cout << "Odtwarzanie muzyki końcowej gry." << std::endl;
     endGameMusic.setLoop(true);
     endGameMusic.play();
 }
 
+// Metoda zatrzymująca muzykę końcową
 void EndGameMenu::stopMusic() {
     endGameMusic.stop();
 }
 
+// Metoda rysująca elementy menu na oknie
 void EndGameMenu::draw(sf::RenderWindow& window) {
     window.draw(background_sprite);
     window.draw(gameOverText);
@@ -116,24 +126,29 @@ void EndGameMenu::draw(sf::RenderWindow& window) {
     window.draw(killCountText);
 }
 
+// Metoda przesuwająca wybór w menu do góry
 void EndGameMenu::moveSelectionUp() {
     selectedBackToMenu = true;
     updateSelection();
 }
 
+// Metoda przesuwająca wybór w menu do dołu
 void EndGameMenu::moveSelectionDown() {
     selectedBackToMenu = false;
     updateSelection();
 }
 
+// Metoda sprawdzająca, czy wybrano powrót do menu
 bool EndGameMenu::isBackToMenuSelected() const {
     return selectedBackToMenu;
 }
 
+// Metoda sprawdzająca, czy mysz znajduje się nad przyciskiem
 bool EndGameMenu::isMouseOverButton(const sf::RectangleShape& button, const sf::Vector2i& mousePosition) const {
     return button.getGlobalBounds().contains(sf::Vector2f(mousePosition));
 }
 
+// Metoda aktualizująca stan menu na podstawie pozycji myszy
 void EndGameMenu::update(const sf::Vector2i& mousePosition) {
     if (isMouseOverButton(backToMenuButton, mousePosition)) {
         backToMenuText.setFillColor(sf::Color::Red);
@@ -154,6 +169,7 @@ void EndGameMenu::update(const sf::Vector2i& mousePosition) {
     }
 }
 
+// Metoda aktualizująca wybór w menu
 void EndGameMenu::updateSelection() {
     if (selectedBackToMenu) {
         backToMenuText.setFillColor(sf::Color::Red);
@@ -166,6 +182,7 @@ void EndGameMenu::updateSelection() {
     }
 }
 
+// Metoda aktualizująca statystyki końcowe (czas przetrwania i liczba zabójstw)
 void EndGameMenu::updateStats(float survivalTime, int killCount) {
     std::stringstream ss;
     ss << "Time: " << std::fixed << std::setprecision(1) << survivalTime << " seconds";
@@ -176,12 +193,14 @@ void EndGameMenu::updateStats(float survivalTime, int killCount) {
     killCountText.setString(ss.str());
 }
 
+// Metoda ustawiająca etykietę czasu
 void EndGameMenu::setTimeLabel(const std::string& label) {
     std::string currentText = survivalTimeText.getString();
     std::string newText = label + currentText.substr(currentText.find(":"));
     survivalTimeText.setString(newText);
 }
 
+// Metoda wyświetlająca menu końcowe gry
 void EndGameMenu::showEndGameMenu(bool playerWon, float survivalTime, int killCount, sf::RenderWindow& window, bool& gameStarted, bool& gameEnded, bool& survivalMode, sf::Music& gameMusic, sf::Clock& survivalClock, Menu& menu, std::function<void()> resetGame, std::function<void(int)> startRound) {
     if (!survivalMode) {
         if (playerWon) {
@@ -190,15 +209,14 @@ void EndGameMenu::showEndGameMenu(bool playerWon, float survivalTime, int killCo
             setEndMessage("");
         }
     } else {
-        setEndMessage(""); // In survival mode, perhaps you want to display nothing or customize this part
+        setEndMessage(""); // W trybie przetrwania możesz dostosować tę część
     }
 
     updateStats(survivalTime, killCount);
     playSound();
     playMusic();
 
-    // Handle event and rendering loop already correctly provided
-
+    // Obsługa zdarzeń i renderowania pętli
     while (window.isOpen()) {
         sf::Event event;
         while (window.pollEvent(event)) {
@@ -212,71 +230,71 @@ void EndGameMenu::showEndGameMenu(bool playerWon, float survivalTime, int killCo
                     moveSelectionDown();
                 } else if (event.key.code == sf::Keyboard::Enter) {
                     if (isBackToMenuSelected()) {
-                        // Handle going back to the menu
+                        // Obsługa powrotu do menu
                         gameEnded = false;
                         gameStarted = false;
                         menu.playSound();
-                        resetGame(); // Reset the game state
-                        stopMusic();  // Stop the end game music
+                        resetGame(); // Resetowanie stanu gry
+                        stopMusic();  // Zatrzymanie muzyki końcowej
                         stopSound();
                         return;
                     } else if (isMouseOverButton(playAgainButton, sf::Mouse::getPosition(window))) {
-                        // Handle playing again
-                        resetGame(); // Reset the game state
+                        // Obsługa ponownego grania
+                        resetGame(); // Resetowanie stanu gry
                         gameStarted = true;
                         gameMusic.setLoop(true);
                         gameMusic.play();
-                        stopMusic();  // Stop the end game music
+                        stopMusic();  // Zatrzymanie muzyki końcowej
                         stopSound();
                         if (survivalMode) {
-                            // Restart survival mode
+                            // Restart trybu przetrwania
                             survivalMode = true;
                             survivalClock.restart();
                         } else {
-                            // Restart stage mode
-                            survivalMode = false; // Ensure we start in stage mode
-                            startRound(1); // Start the first round
+                            // Restart trybu etapowego
+                            survivalMode = false; // Upewnienie się, że rozpoczynamy w trybie etapowym
+                            startRound(1); // Rozpoczęcie pierwszej rundy
                         }
                         return;
                     } else if (isMouseOverButton(exitButton, sf::Mouse::getPosition(window))) {
                         stopMusic();
                         stopSound();
-                        window.close(); // Exit the game
+                        window.close(); // Zakończenie gry
                     }
                 }
             } else if (event.type == sf::Event::MouseButtonPressed) {
                 if (event.mouseButton.button == sf::Mouse::Left) {
                     sf::Vector2i mousePos = sf::Mouse::getPosition(window);
                     if (isMouseOverButton(backToMenuButton, mousePos)) {
-                        // Handle going back to the menu
+                        // Obsługa powrotu do menu
                         gameEnded = false;
                         gameStarted = false;
                         menu.playSound();
-                        resetGame(); // Reset the game state
-                        stopMusic();  // Stop the end game music
+                        resetGame(); // Resetowanie stanu gry
+                        stopMusic();  // Zatrzymanie muzyki końcowej
                         stopSound();
                         return;
                     } else if (isMouseOverButton(playAgainButton, mousePos)) {
                         stopSound();
-                        stopMusic();  // Zatrzymaj muzykę końcowej gry
-                        resetGame(); // Resetuj stan gry
+                        stopMusic();  // Zatrzymanie muzyki końcowej
+                        resetGame(); // Resetowanie stanu gry
                         gameStarted = true;
                         gameMusic.setLoop(true);
                         gameMusic.play();
                         if (survivalMode) {
-                            // Restart survival mode
+                            // Restart trybu przetrwania
                             survivalMode = true;
                             survivalClock.restart();
                         } else {
-                            // Restart stage mode
-                            survivalMode = false; // Ensure we start in stage mode
-                            startRound(1); // Start the first round
+                            // Restart trybu etapowego
+                            survivalMode = false; // Upewnienie się, że rozpoczynamy w trybie etapowym
+                            startRound(1); // Rozpoczęcie pierwszej rundy
                         }
                         return;
                     } else if (isMouseOverButton(exitButton, mousePos)) {
                         stopMusic();
                         stopSound();
-                        window.close(); // Exit the game
+                        window.close(); // Zakończenie gry
                     }
                 }
             }
@@ -284,7 +302,6 @@ void EndGameMenu::showEndGameMenu(bool playerWon, float survivalTime, int killCo
 
         sf::Vector2i mousePosition = sf::Mouse::getPosition(window);
         update(mousePosition);
-
         window.clear();
         draw(window);
         window.display();

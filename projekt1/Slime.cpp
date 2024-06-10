@@ -4,8 +4,11 @@
 #include <cmath>
 #include <functional>
 
-Slime::Slime(int fps) : currentFrame(0), animationFps(fps), health(100), direction(Right) {}
+// Konstruktor klasy Slime
+Slime::Slime(int fps)
+    : currentFrame(0), animationFps(fps), health(100), direction(Right) {}
 
+// Metoda przesuwająca postać slime z uwzględnieniem kolizji
 void Slime::moveWithCollision(const sf::FloatRect& bounds, float offsetX, float offsetY) {
     sf::Vector2f oldPosition = getPosition();
     sf::Sprite::move(offsetX, offsetY);
@@ -22,17 +25,19 @@ void Slime::moveWithCollision(const sf::FloatRect& bounds, float offsetX, float 
     }
 }
 
+// Metoda strzelająca projektylem slime w kierunku celu
 void Slime::shoot(std::vector<SlimeProjectile>& slimeProjectiles, const sf::Texture& projectileTexture, sf::Vector2f target) {
     if (shootClock.getElapsedTime().asSeconds() > 4.0f) {
         sf::Vector2f slimeCenter = getPosition() + sf::Vector2f(getGlobalBounds().width / 2, getGlobalBounds().height / 2);
         sf::Vector2f direction = normalize(target - slimeCenter);
-        SlimeProjectile projectile(projectileTexture, direction, 0.1f);
+        SlimeProjectile projectile(projectileTexture, direction, 0.9f);
         projectile.setPosition(slimeCenter);
         slimeProjectiles.push_back(projectile);
         shootClock.restart();
     }
 }
 
+// Metody dodające klatki animacji dla różnych kierunków ruchu
 void Slime::add_animation_frame_right(const sf::IntRect& frame) {
     framesRight.push_back(frame);
 }
@@ -49,6 +54,7 @@ void Slime::add_animation_frame_down(const sf::IntRect& frame) {
     framesDown.push_back(frame);
 }
 
+// Metoda dodająca klatki animacji slime
 void Slime::addSlimeAnimationFrames() {
     std::vector<sf::IntRect> frames = {
         sf::IntRect(3, 4, 38, 26),
@@ -68,6 +74,7 @@ void Slime::addSlimeAnimationFrames() {
     }
 }
 
+// Metoda aktualizująca stan slime
 void Slime::step() {
     frameTime += clock.restart();
     sf::Time timePerFrame = sf::seconds(1.0f / animationFps);
@@ -79,6 +86,7 @@ void Slime::step() {
     }
 }
 
+// Metoda zwracająca odpowiednie klatki animacji w zależności od kierunku ruchu
 const std::vector<sf::IntRect>& Slime::getFrames() const {
     switch (direction) {
     case Right: return framesRight;
@@ -89,6 +97,7 @@ const std::vector<sf::IntRect>& Slime::getFrames() const {
     return framesRight;
 }
 
+// Metody get/set zdrowia slime
 int Slime::getHealth() const {
     return health;
 }
@@ -97,25 +106,29 @@ void Slime::setHealth(int hp) {
     health = hp;
 }
 
+// Metody obsługujące obrażenia i leczenie slime
 void Slime::takeDamage(int damage) {
     health -= damage;
-    if (health < 0) health = 0;
+    if (health < 0) health = 0; // Zapewnienie, że zdrowie nie spadnie poniżej 0
 }
 
 void Slime::heal(int amount) {
     health += amount;
 }
 
+// Metoda klonująca slime
 Slime Slime::clone() const {
     Slime clone(*this);
     clone.clock.restart();
     return clone;
 }
 
+// Metoda sprawdzająca, czy dwa punkty są wystarczająco daleko od siebie
 bool Slime::isFarEnough(const sf::Vector2f& pos1, const sf::Vector2f& pos2, float minDistance) {
     return std::hypot(pos1.x - pos2.x, pos1.y - pos2.y) > minDistance;
 }
 
+// Metoda tworząca nowego slime
 void Slime::createSlime(std::vector<Slime>& slimes, sf::Texture& slime_texture, sf::RenderWindow& window, const sf::Vector2f& heroPosition) {
     const int margin = 50;
     int maxX = window.getSize().x - margin;
@@ -140,11 +153,12 @@ void Slime::createSlime(std::vector<Slime>& slimes, sf::Texture& slime_texture, 
     slimes.push_back(slime);
 }
 
+// Metoda sprawdzająca kolizje slime z bohaterem
 void Slime::checkHeroSlimeCollisions(std::vector<Slime>& slimes, sf::Sprite& hero, float& health, bool invulnerable, float damage, bool& gameEnded, sf::Music& gameMusic, std::function<void()> updateHealthText) {
     for (auto& slime : slimes) {
         if (hero.getGlobalBounds().intersects(slime.getGlobalBounds())) {
             if (!invulnerable) {
-                health -= damage * 0.01;
+                health -= damage * 0.04;
                 updateHealthText();
                 if (health <= 0.0) {
                     gameEnded = true;

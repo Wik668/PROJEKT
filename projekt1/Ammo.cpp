@@ -2,16 +2,19 @@
 #include <cstdlib>
 #include <cmath>
 
+// Konstruktor klasy Ammo inicjalizujący obiekt na podstawie pozycji (x, y) oraz tekstury
 Ammo::Ammo(float x, float y, const sf::Texture& texture) {
     setTexture(texture);
     setPosition(x, y);
-    setScale(0.05f, 0.05f); // Corrected the scale call
+    setScale(0.05f, 0.05f); // Poprawione wywołanie ustawienia skali
 }
 
+// Funkcja statyczna sprawdzająca, czy pozycja jest wystarczająco daleko od pozycji bohatera
 bool Ammo::isFarEnough(const sf::Vector2f& position, const sf::Vector2f& heroPosition, float minDistance) {
     return std::abs(position.x - heroPosition.x) >= minDistance && std::abs(position.y - heroPosition.y) >= minDistance;
 }
 
+// Funkcja statyczna odpowiedzialna za tworzenie nowych paczek amunicji
 void Ammo::spawnAmmo(std::vector<Ammo>& ammoPacks, const sf::Texture& ammoTexture, const sf::RenderWindow& window, sf::Clock& ammoRespawnClock, const sf::Sprite& hero, float minDistance) {
     const int margin = 50;
     int maxX = window.getSize().x - margin;
@@ -31,6 +34,7 @@ void Ammo::spawnAmmo(std::vector<Ammo>& ammoPacks, const sf::Texture& ammoTextur
     ammoRespawnClock.restart();
 }
 
+// Funkcja statyczna sprawdzająca kolizje między bohaterem a paczkami amunicji
 void Ammo::checkHeroAmmoCollisions(std::vector<Ammo>& ammoPacks, sf::Sprite& hero, bool& unlimitedAmmo, sf::Clock& unlimitedAmmoClock, bool& reloading, std::function<void()> updateAmmoText, bool& tripleShotActive, sf::Clock& tripleShotClock) {
     for (auto it = ammoPacks.begin(); it != ammoPacks.end();) {
         if (hero.getGlobalBounds().intersects(it->getGlobalBounds())) {
@@ -38,7 +42,7 @@ void Ammo::checkHeroAmmoCollisions(std::vector<Ammo>& ammoPacks, sf::Sprite& her
             tripleShotActive = true;
             unlimitedAmmoClock.restart();
             tripleShotClock.restart();
-            it = ammoPacks.erase(it); // Remove collected ammo
+            it = ammoPacks.erase(it); // Usunięcie zebranej paczki amunicji
             if (reloading) {
                 reloading = false;
                 updateAmmoText();
@@ -49,7 +53,7 @@ void Ammo::checkHeroAmmoCollisions(std::vector<Ammo>& ammoPacks, sf::Sprite& her
     }
 }
 
-
+// Funkcja ustawiająca skalę obiektu Ammo
 void Ammo::setScale(float x, float y) {
     sf::Sprite::setScale(x, y);
 }

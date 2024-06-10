@@ -1,8 +1,11 @@
 #include "ninja.h"
 #include <cmath>
 
-Ninja::Ninja(int fps) : currentFrame(0), animationFps(fps), health(100), direction(Right), teleportTimer(), frameTime(sf::Time::Zero), isDisappearing(false), isReappearing(false) {}
+// Konstruktor klasy Ninja
+Ninja::Ninja(int fps)
+    : currentFrame(0), animationFps(fps), health(100), direction(Right), teleportTimer(), frameTime(sf::Time::Zero), isDisappearing(false), isReappearing(false) {}
 
+// Metoda przesuwająca postać ninja z uwzględnieniem kolizji
 void Ninja::moveWithCollision(const sf::FloatRect& bounds, float offsetX, float offsetY) {
     sf::Vector2f oldPosition = getPosition();
     sf::Sprite::move(offsetX, offsetY);
@@ -19,13 +22,15 @@ void Ninja::moveWithCollision(const sf::FloatRect& bounds, float offsetX, float 
     }
 }
 
+// Metoda tworząca klona ninja
 void Ninja::createClone(const sf::Texture* ninja_texture) {
     Ninja clone(*this);
     clone.setTexture(*ninja_texture);
-    clone.setHealth(25); // Clones have less health
+    clone.setHealth(25); // Klony mają mniej zdrowia
     clones.push_back(std::make_pair(clone, clock.getElapsedTime()));
 }
 
+// Metoda aktualizująca stan klonów
 void Ninja::updateClones() {
     sf::Time currentTime = clock.getElapsedTime();
     for (auto it = clones.begin(); it != clones.end(); ) {
@@ -37,7 +42,7 @@ void Ninja::updateClones() {
     }
 }
 
-
+// Metody dodające klatki animacji dla różnych kierunków ruchu
 void Ninja::add_animation_frame_right(const sf::IntRect& frame) {
     framesRight.push_back(frame);
 }
@@ -62,6 +67,7 @@ void Ninja::add_reappear_frame(const sf::IntRect& frame) {
     framesReappear.push_back(frame);
 }
 
+// Metoda dodająca klatki animacji ninja
 void Ninja::addNinjaAnimationFrames() {
     std::vector<sf::IntRect> frames = {
         sf::IntRect(6, 100, 17, 26),
@@ -99,6 +105,7 @@ void Ninja::addNinjaAnimationFrames() {
     }
 }
 
+// Metoda aktualizująca stan ninja
 void Ninja::step(const sf::Vector2f& heroPosition, const sf::FloatRect& windowBounds) {
     frameTime += clock.restart();
     sf::Time timePerFrame = sf::seconds(1.0f / animationFps);
@@ -128,10 +135,10 @@ void Ninja::step(const sf::Vector2f& heroPosition, const sf::FloatRect& windowBo
         }
     }
 
-    // Handle teleportation and clone creation
+    // Obsługa teleportacji i tworzenia klonów
     if (!isDisappearing && !isReappearing && teleportTimer.getElapsedTime().asSeconds() >= 5.0f) {
         isDisappearing = true;
-        createClone(getTexture()); // Create a clone
+        createClone(getTexture()); // Tworzenie klona
         currentFrame = 0;
         teleportTimer.restart();
     }
@@ -139,6 +146,7 @@ void Ninja::step(const sf::Vector2f& heroPosition, const sf::FloatRect& windowBo
     updateClones();
 }
 
+// Metoda zwracająca odpowiednie klatki animacji w zależności od kierunku ruchu
 const std::vector<sf::IntRect>& Ninja::getFrames() const {
     switch (direction) {
     case Right: return framesRight;
@@ -146,9 +154,10 @@ const std::vector<sf::IntRect>& Ninja::getFrames() const {
     case Up: return framesUp;
     case Down: return framesDown;
     }
-    return framesRight; // Default case
+    return framesRight; // Domyślny przypadek
 }
 
+// Metody get/set zdrowia ninja
 int Ninja::getHealth() const {
     return health;
 }
@@ -157,20 +166,23 @@ void Ninja::setHealth(int hp) {
     health = hp;
 }
 
+// Metody obsługujące obrażenia i leczenie ninja
 void Ninja::takeDamage(int damage) {
     health -= damage;
-    if (health < 0) health = 0; // Ensure health doesn't go below 0
+    if (health < 0) health = 0; // Zapewnienie, że zdrowie nie spadnie poniżej 0
 }
 
 void Ninja::heal(int amount) {
     health += amount;
 }
 
+// Metoda sprawdzająca, czy ninja jest wystarczająco daleko od bohatera
 bool Ninja::isFarEnoughninja(const sf::Vector2f& position, const sf::Vector2f& heroPosition, float minDistance) {
     float distance = std::sqrt((position.x - heroPosition.x) * (position.x - heroPosition.x) + (position.y - heroPosition.y) * (position.y - heroPosition.y));
     return distance >= minDistance;
 }
 
+// Metoda tworząca nowego ninja
 void Ninja::createNinja(std::vector<Ninja>& ninjas, sf::Texture& ninja_texture, sf::RenderWindow& window, const sf::Vector2f& heroPosition) {
     const int margin = 50;
     int maxX = window.getSize().x - margin;
@@ -195,21 +207,24 @@ void Ninja::createNinja(std::vector<Ninja>& ninjas, sf::Texture& ninja_texture, 
     ninjas.push_back(ninja);
 }
 
+// Metoda sprawdzająca kolizje ninja z bohaterem
 void Ninja::checkHeroNinjaCollisions(std::vector<Ninja>& ninjas, sf::Sprite& hero, float& health, bool invulnerable, float damage, bool& gameEnded, sf::Music& gameMusic, std::function<void()> updateHealthText) {
     for (auto& ninja : ninjas) {
         if (hero.getGlobalBounds().intersects(ninja.getGlobalBounds())) {
             if (!invulnerable) {
-                health -= damage * 0.005;
+                health -= damage * 0.009;
                 updateHealthText();
                 if (health <= 0.0) {
                     gameEnded = true;
                     gameMusic.stop();
+
                 }
             }
         }
     }
 }
 
+// Metoda teleportująca ninja
 void Ninja::teleport(const sf::Vector2f& heroPosition, const sf::FloatRect& bounds) {
     const int margin = 50;
     int maxX = bounds.width - margin;
@@ -227,6 +242,7 @@ void Ninja::teleport(const sf::Vector2f& heroPosition, const sf::FloatRect& boun
     setPosition(newPosition);
 }
 
+// Metoda zwracająca klony ninja
 std::vector<Ninja> Ninja::getClones() const {
     std::vector<Ninja> cloneNinjas;
     for (const auto& clone : clones) {

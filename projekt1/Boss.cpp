@@ -3,22 +3,24 @@
 #include <cmath>
 #include <functional>
 
-Boss::Boss(float speed) : speed(speed), health(500.0f), current_frame(0), animation_delay(0.1f),
+// Konstruktor klasy Boss inicjalizujący podstawowe parametry
+Boss::Boss(float speed)
+    : speed(speed), health(500.0f), current_frame(0), animation_delay(0.1f),
     dying(false), dead(false), deathAnimationDuration(1.0f), postDeathDelay(1.0f) {
     animationClock.restart();
 }
 
-
-
+// Metoda strzelająca pociskiem (Fireball) w kierunku celu
 void Boss::shoot(std::vector<Fireball>& fireballs, const sf::Texture& fireballTexture, sf::Vector2f target) {
     if (!dying && shootClock.getElapsedTime().asSeconds() > 2.0f) {
         sf::Vector2f direction = normalize(target - getPosition());
-        fireballs.emplace_back(fireballTexture, direction, 0.3f);
+        fireballs.emplace_back(fireballTexture, direction, 0.9f);
         fireballs.back().setPosition(getPosition());
         shootClock.restart();
     }
 }
 
+// Metoda aktualizująca animację bossa
 void Boss::step() {
     if (!dying) {
         if (animationClock.getElapsedTime().asSeconds() > animation_delay) {
@@ -43,6 +45,7 @@ void Boss::step() {
     }
 }
 
+// Metoda odbierająca punkty zdrowia bossowi
 void Boss::takeDamage(int damage) {
     if (!dying) {
         health -= damage;
@@ -52,6 +55,7 @@ void Boss::takeDamage(int damage) {
     }
 }
 
+// Metoda inicjalizująca animację śmierci bossa
 void Boss::dieAnimation() {
     dying = true;
     dead = false;
@@ -60,22 +64,27 @@ void Boss::dieAnimation() {
     deathClock.restart();
 }
 
+// Metoda sprawdzająca, czy boss umiera
 bool Boss::isDying() const {
     return dying;
 }
 
+// Metoda sprawdzająca, czy boss jest martwy
 bool Boss::isDead() const {
     return dead;
 }
 
+// Metoda sprawdzająca, czy można tworzyć nowych wrogów po śmierci bossa
 bool Boss::canSpawnNewEnemies() const {
     return deathClock.getElapsedTime().asSeconds() >= deathAnimationDuration + postDeathDelay;
 }
 
+// Metoda zwracająca aktualne zdrowie bossa
 float Boss::getHealth() const {
     return health;
 }
 
+// Metody dodające klatki animacji w różnych kierunkach
 void Boss::add_animation_frame_right(const sf::IntRect& frame) {
     animation_frames_right.push_back(frame);
 }
@@ -84,6 +93,7 @@ void Boss::add_death_animation_frame(const sf::IntRect& frame) {
     death_animation_frames.push_back(frame);
 }
 
+// Metoda poruszająca bossa z uwzględnieniem kolizji z granicami okna
 void Boss::moveWithCollision(const sf::FloatRect& bounds, float dx, float dy) {
     if (!dying) {
         sf::Vector2f newPos = getPosition() + sf::Vector2f(dx, dy);
@@ -93,14 +103,16 @@ void Boss::moveWithCollision(const sf::FloatRect& bounds, float dx, float dy) {
     }
 }
 
+// Metoda sprawdzająca, czy boss jest wystarczająco daleko od podanej pozycji
 bool Boss::isFarEnough(const sf::Vector2f& pos1, float minDistance) {
     return std::hypot(pos1.x, pos1.y) > minDistance;
 }
 
+// Metoda dodająca wszystkie klatki animacji bossa
 void Boss::addBossAnimationFrames(Boss& boss) {
     std::vector<sf::IntRect> frames = {
-        sf::IntRect(108, 219, 90, 100),// prostokat wg gimpa 65x100
-        sf::IntRect(397, 221, 90, 100),//dziala lepiej na 90//komentarz zeby zrobic commita znowu nie działa push
+        sf::IntRect(108, 219, 90, 100),
+        sf::IntRect(397, 221, 90, 100),
         sf::IntRect(685, 219, 90, 100),
         sf::IntRect(973, 220, 90, 100),
         sf::IntRect(1260, 220, 90, 100),
@@ -146,6 +158,7 @@ void Boss::addBossAnimationFrames(Boss& boss) {
     }
 }
 
+// Metoda tworząca nowego bossa
 void Boss::createBoss(std::vector<Boss>& bosses, sf::Texture& boss_texture, sf::RenderWindow& window) {
     const int margin = 300;
     int maxX = window.getSize().x - margin;
@@ -163,18 +176,19 @@ void Boss::createBoss(std::vector<Boss>& bosses, sf::Texture& boss_texture, sf::
     Boss boss(5);
     boss.setTexture(boss_texture);
     Boss::addBossAnimationFrames(boss);
-    boss.setTextureRect(sf::IntRect(108, 219, 64, 100)); // Set initial frame
+    boss.setTextureRect(sf::IntRect(108, 219, 64, 100)); // Ustawienie początkowej klatki
     boss.setScale(3, 3);
     boss.setPosition(newPosition);
     boss.step();
     bosses.push_back(boss);
 }
 
+// Metoda sprawdzająca kolizje bohatera z bossem
 void Boss::checkHeroBossCollisions(std::vector<Boss>& bosses, sf::Sprite& hero, float& health, bool invulnerable, float damage, bool& gameEnded, sf::Music& gameMusic, std::function<void()> updateHealthText) {
     for (auto& boss : bosses) {
         if (hero.getGlobalBounds().intersects(boss.getGlobalBounds())) {
             if (!invulnerable) {
-                health -= damage * 0.02;
+                health -= damage * 0.03;
                 updateHealthText();
                 if (health <= 0.0) {
                     gameEnded = true;
@@ -184,6 +198,8 @@ void Boss::checkHeroBossCollisions(std::vector<Boss>& bosses, sf::Sprite& hero, 
         }
     }
 }
+
+// Metoda sprawdzająca, czy boss powinien zostać usunięty
 bool Boss::shouldBeRemoved() const {
     return dead && deathClock.getElapsedTime().asSeconds() >= deathAnimationDuration + postDeathDelay;
 }
