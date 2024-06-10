@@ -309,3 +309,4 @@ void EndGameMenu::showEndGameMenu(bool playerWon, float survivalTime, int killCo
 
     stopSound();
 }
+
