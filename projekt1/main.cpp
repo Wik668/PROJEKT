@@ -23,7 +23,7 @@
 #include "EndGameMenu.h"
 using namespace std;
 using namespace sf;
-
+//klasa gra, zawierajaca główną funkcjonalność
 class Game {
     std::vector<std::unique_ptr<Zombie>> zombies;
     sf::Texture zombie_texture;
@@ -39,7 +39,6 @@ class Game {
     sf::Clock shootClock;
     bool invulnerable = false;
 private:
-
     bool tripleShotActive = false;
     sf::Clock tripleShotClock;
     float health;
@@ -107,23 +106,26 @@ private:
     bool showingRoundText;
     bool roundStarted;
 
+    //licznik czasu
     void updateTimerText() {
         sf::Time elapsed = survivalClock.getElapsedTime();
         std::stringstream ss;
         ss << "Time: " << std::fixed << std::setprecision(1) << elapsed.asSeconds() <<"s";
         timerText.setString(ss.str());
     }
-
+    //do respienia potworow i rzeczy od nas
     bool isFarEnough(const sf::Vector2f& position, float distance) {
         sf::Vector2f heroPosition = hero.getPosition();
         return std::abs(position.x - heroPosition.x) >= distance && std::abs(position.y - heroPosition.y) >= distance;
     }
 
+    //pokaz bledy
     void exitWithError(const std::string& errorMessage) {
         std::cout << errorMessage << std::endl;
         exit(1);
     }
 
+    //zaladuj pliki
     void loadResources() {
         std::vector<std::pair<std::string, sf::Texture*>> textures = {
             {"boss.png", &boss_texture},
@@ -155,14 +157,17 @@ private:
         background_sprite.setTexture(background_texture);
     }
 
+    //odtwarzanie muzyki
     void playSound() {
         sound.play();
     }
 
+    //zatrzymanie muzyki
     void stopSound() {
         sound.stop();
     }
 public:
+    //konstrktor klasy game z główną funkcjonalnością
     Game()
         : health(100),
         window(sf::VideoMode(window_width, window_height), "Jerry_The_Killer"),
@@ -231,6 +236,7 @@ public:
                               window_height / 2 - roundText.getGlobalBounds().height / 2);
     }
 
+    //reset naszego hp
     void updateHealthText() {
         float displayHealth = std::max(0.0f, health);
         std::stringstream ss;
@@ -238,9 +244,9 @@ public:
         healthText.setString("HP: " + ss.str());
     }
 
+    //odpalenie
     void run() {
         menu.playSound();
-        //endGameMenu.playSound();
         sf::Clock clock;
         float timeSinceLastUpdate = 0.0f;
         float timePerFrame = 1.f / 300.f; // około 0.03333 sekundy
@@ -249,7 +255,7 @@ public:
             sf::Time elapsedTime = clock.restart();
             timeSinceLastUpdate += elapsedTime.asSeconds();
 
-            handleEvents(); // Obsługa zdarzeń może być poza kontrolą czasu, aby szybko reagować na akcje użytkownika
+            handleEvents();
 
             while (timeSinceLastUpdate > timePerFrame) {
                 timeSinceLastUpdate -= timePerFrame;
@@ -261,6 +267,8 @@ public:
 
         gameMusic.stop(); // zatrzymaj muzykę na koniec gry
     }
+
+    //zresetuj gre
     void resetGame() {
         health = 100;
         updateHealthText();
@@ -298,6 +306,8 @@ public:
             startRound(1);
         }
     }
+
+    //funkcja startu rundy
     void startRound(int round) {
         roundCounter = round;
         showingRoundText = true;
@@ -322,6 +332,8 @@ public:
         bosses.clear();
 
     }
+
+    //obsluga strzelania
     void shootBullet() {
         if ((ammo > 0 || unlimitedAmmo) && !reloading) {
             if (unlimitedAmmo || shootClock.getElapsedTime().asSeconds() >= 0.5f) { // Check if unlimited ammo or 0.5 seconds have passed since the last shot
@@ -362,6 +374,7 @@ public:
         }
     }
 
+    //zacznij gre
     void startGame(bool survival) {
         gameStarted = true;
         gameEnded = false;
@@ -380,6 +393,8 @@ public:
         gameMusic.setLoop(true);
         gameMusic.play();
     }
+
+    //aktualizuj ammo
     void updateAmmoText() {
         std::stringstream ss;
         if (unlimitedAmmo) {
@@ -390,6 +405,7 @@ public:
         ammoText.setString(ss.str());
     }
 
+    //logika przeladowania
     void reload() {
         if (!reloading && !unlimitedAmmo) {
             reloading = true;
@@ -398,6 +414,7 @@ public:
         }
     }
 
+    //sprawdz kolizje pociskow z przeciwnikami
     void checkBulletCollisions() {
         for (auto bulletIt = bullets.begin(); bulletIt != bullets.end();) {
             bool bulletErased = false;
@@ -481,7 +498,6 @@ public:
             }
         }
 
-        // Remove bosses that should be removed
         bosses.erase(std::remove_if(bosses.begin(), bosses.end(),
                                     [](const Boss& boss) { return boss.shouldBeRemoved(); }),
                      bosses.end());
@@ -525,6 +541,7 @@ public:
     }
 
 
+    //logika gry, przechwytywanie zewn czynnosci
     void handleEvents() {
         sf::Event event;
         while (window.pollEvent(event)) {
@@ -583,6 +600,7 @@ public:
         }
     }
 
+    //kolory przyciskow logika
     void updateButtonColors(const sf::Vector2i& mousePos) {
         if (menu.isMouseOverButton(menu.survivalButton, mousePos)) {
             menu.survivalButton.setTexture(&survivalButtonTextureRed);
@@ -597,6 +615,7 @@ public:
         }
     }
 
+    //aktualizuj gre w zaleznosci od miejsca i zdarzenia
     void update() {
         if (gameStarted && !gameEnded) {
             if (reloading) {
@@ -872,10 +891,10 @@ public:
     }
 
 
+    //logika wyswietleniaa
     void render() {
         window.clear();
         if (gameStarted) {
-            // Draw game elements...
 
             sf::FloatRect windowBounds(0, 0, window_width, window_height); // Declare windowBounds here
 
@@ -940,15 +959,16 @@ public:
         window.display();
     }
 
-
     void updateKillCounterText() {
         std::stringstream ss;
         ss << "Kills: " << zombiesKilled + Ninja_killed + Slime_killed;
         killCounterText.setString(ss.str());
     }
+
     bool checkCollision(const sf::Sprite& sprite1, const sf::Sprite& sprite2) {
         return sprite1.getGlobalBounds().intersects(sprite2.getGlobalBounds());
     }
+
     void resolveCollision(sf::Sprite& sprite1, sf::Sprite& sprite2) {
         sf::FloatRect bounds1 = sprite1.getGlobalBounds();
         sf::FloatRect bounds2 = sprite2.getGlobalBounds();
@@ -970,7 +990,7 @@ public:
         }
     }
 };
-
+//glowna funkcja odpalenia gry
 int main() {
     Game game;
     game.run();

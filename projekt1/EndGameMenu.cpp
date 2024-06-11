@@ -213,8 +213,6 @@ void EndGameMenu::showEndGameMenu(bool playerWon, float survivalTime, int killCo
     }
 
     updateStats(survivalTime, killCount);
-    playSound();
-    playMusic();
 
     // Obsługa zdarzeń i renderowania pętli
     while (window.isOpen()) {
