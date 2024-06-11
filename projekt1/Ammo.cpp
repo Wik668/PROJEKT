@@ -3,8 +3,7 @@
 #include <cmath>
 
 // Konstruktor klasy Ammo inicjalizujący obiekt na podstawie pozycji (x, y) oraz tekstury
-Ammo::Ammo(float x, float y, const sf::Texture& texture) {
-    setTexture(texture);
+Ammo::Ammo(float x, float y, const sf::Texture& texture) : GameObject(texture) {
     setPosition(x, y);
     setScale(0.05f, 0.05f); // Poprawione wywołanie ustawienia skali
 }
@@ -51,9 +50,4 @@ void Ammo::checkHeroAmmoCollisions(std::vector<Ammo>& ammoPacks, sf::Sprite& her
             ++it;
         }
     }
-}
-
-// Funkcja ustawiająca skalę obiektu Ammo
-void Ammo::setScale(float x, float y) {
-    sf::Sprite::setScale(x, y);
 }

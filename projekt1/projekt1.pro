@@ -33,6 +33,7 @@ HEADERS += \
     Button.h \
     EndGameMenu.h \
     Fireball.h \
+    GameObject.h \
     Medkit.h \
     Menu.h \
     Slime.h \

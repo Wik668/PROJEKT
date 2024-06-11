@@ -1,28 +1,27 @@
 #ifndef AMMO_H
 #define AMMO_H
 
-#include <SFML/Graphics.hpp>
+#include "GameObject.h"
 #include <vector>
 #include <functional>
+#include <SFML/System.hpp>
 
-// Klasa Ammo dziedzicząca po sf::Sprite
-class Ammo : public sf::Sprite {
+class Ammo : public GameObject {
 public:
-    // Konstruktor klasy Ammo
+    // Konstruktor klasy Ammo inicjalizujący obiekt na podstawie pozycji (x, y) oraz tekstury
     Ammo(float x, float y, const sf::Texture& texture);
 
-    // Funkcja do tworzenia nowych paczek amunicji
+    // Funkcja statyczna sprawdzająca, czy pozycja jest wystarczająco daleko od pozycji bohatera
+    static bool isFarEnough(const sf::Vector2f& position, const sf::Vector2f& heroPosition, float minDistance);
+
+    // Funkcja statyczna odpowiedzialna za tworzenie nowych paczek amunicji
     static void spawnAmmo(std::vector<Ammo>& ammoPacks, const sf::Texture& ammoTexture, const sf::RenderWindow& window, sf::Clock& ammoRespawnClock, const sf::Sprite& hero, float minDistance);
 
-    // Funkcja do sprawdzania kolizji paczek amunicji z bohaterem
+    // Funkcja statyczna sprawdzająca kolizje między bohaterem a paczkami amunicji
     static void checkHeroAmmoCollisions(std::vector<Ammo>& ammoPacks, sf::Sprite& hero, bool& unlimitedAmmo, sf::Clock& unlimitedAmmoClock, bool& reloading, std::function<void()> updateAmmoText, bool& tripleShotActive, sf::Clock& tripleShotClock);
 
-    // Ustawienie skali dla obiektu Ammo
-    void setScale(float x, float y);
-
-private:
-    // Funkcja sprawdzająca czy odległość między pozycjami jest wystarczająca
-    static bool isFarEnough(const sf::Vector2f& position, const sf::Vector2f& heroPosition, float minDistance);
+    // Metoda aktualizacji amunicji (implementacja wymagana przez klasę bazową)
+    void update(float) override {}
 };
 
 #endif // AMMO_H
