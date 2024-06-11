@@ -37,4 +37,4 @@ Instrukcja pobrania gry:
 
 **Wiktor Cemel & Jakub Chruściel**
 
-
+Assety (grafika jest wygenerowana przez sztuczna inteligencje i ze strony itch.io)
