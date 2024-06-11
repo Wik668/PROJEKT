@@ -15,8 +15,8 @@ Tryb Stage:
 Gracz pojawia się na mapie, gdzie musi stawić czoła kolejnym falom przeciwników.
 - Runda 1: Walka z zombie, które mają najsłabsze umiejętności.
 - Runda 2: Po pokonaniu zombie pojawiają się ninje oraz zombie. Ninje są szybsze i mniejsze, a także posiadają lepsze statystyki i mocniejsze umiejętności.
-- Runda 3: Po wyeliminowaniu ninjów, pojawiają się slimy, ninje i zombie. Slimy są najsilniejszymi przeciwnikami, zadają większe obrażenia, strzelają w stronę gracza i mają znacznie większe HP.
-- Runda 4: Ostatnia runda zawiera slimy oraz bossa, którego pokonanie kończy tryb Stage.
+- Runda 3: Po wyeliminowaniu ninjów, pojawiają się slimy, ninje i zombie. Slimy są o wiele silniejszymi przeciwnikami, zadają większe obrażenia, strzelają w stronę gracza i mają znacznie większe HP.
+- Runda 4: Ostatnia runda zawiera slimy oraz bossa, boss jest najsilniejzym przeciwnikiem, pokonanie przeciwników kończy tryb Stage.
 
 Sterowanie
 
@@ -37,4 +37,4 @@ Instrukcja pobrania gry:
 
 **Wiktor Cemel & Jakub Chruściel**
 
-
+Assety (grafika jest wygenerowana przez sztuczna inteligencje i ze strony itch.io)
